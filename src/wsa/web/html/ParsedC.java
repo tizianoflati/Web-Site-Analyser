@@ -11,7 +11,6 @@ public class ParsedC implements Parsed{
 	private Tree tree;
 	private Map<String, List<Node>> map = new HashMap<>();
 	
-	
 	public ParsedC(Tree tree) {
 		this.tree = tree;
 		this.visit( (n) -> {
