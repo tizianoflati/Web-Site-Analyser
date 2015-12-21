@@ -23,9 +23,9 @@ public class Test {
 			System.out.println("Tag: " + n.tag + "\nAttr: " + n.attr + "\nContent: " + n.content);
 		};
 		
-		ParsedC parsed = new ParsedC(html);		
-		parsed.visit(consumer);
-		System.out.println("\nlinks: " + parsed.getLinks());
+//		ParsedC parsed = new ParsedC(html);		
+//		parsed.visit(consumer);
+//		System.out.println("\nlinks: " + parsed.getLinks());
 	}
 
 }

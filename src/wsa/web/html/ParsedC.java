@@ -1,21 +1,24 @@
 package wsa.web.html;
 
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.NodeList;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.Element;
+import javax.swing.text.html.HTML;
 
 public class ParsedC implements Parsed{
 	private Tree tree;
 	private Map<String, List<Node>> map = new HashMap<>();
 	
 	public ParsedC( Document document ) {
-		tree = translate(document);
+		tree = translate(document.getDefaultRootElement());
 		this.visit( (n) -> {
 			String tag = n.tag;
 			if( map.get(tag) == null ) {
@@ -26,33 +29,73 @@ public class ParsedC implements Parsed{
 		});
 	}
 	
-	private static Tree translate ( org.w3c.dom.Node node ) {
-		Parsed.Node treeRoot = extractNode(node);
+	private static Tree translate ( Element element ) {
+		Parsed.Node treeRoot = extractNode(element);
+		if(treeRoot == null) return null;
+		
 		Tree tree = new Tree(treeRoot);
+
+		for(int i=0; i<element.getElementCount(); i++)
+		{
+			Element childNode = element.getElement(i);
+			Tree childTree = translate(childNode);
+			if(childTree != null) tree.addChild(childTree);
+		}
 		
-		NodeList list = node.getChildNodes();
-		
-		 for (int i=0; i<list.getLength(); i++) {
-			 org.w3c.dom.Node childNode = list.item(i);
-			 Tree childTree = translate(childNode);
-			 tree.addChild(childTree);
-		 }	 
 		 return tree;
 	}
 	
-	// quando non uso nessun campo della classe meglio fare metodi statici
-	// meglio ancora se creare una classe di utilità con all'interno
-	// i metodi statici
-	private static Node extractNode(org.w3c.dom.Node node) {
-		NamedNodeMap nodeMap = node.getAttributes();
+	private static Node extractNode(Element element) {
+		if(element.getName().equals(HTML.Tag.COMMENT.toString())) return null;
+//		if(element.getName().equals(HTML.Tag.IMPLIED.toString())) return null;
+		
+		AttributeSet nodeMap = element.getAttributes();
 		Map<String, String> map = new HashMap<>();
-		for(int i = 0; i < nodeMap.getLength(); i++) {
-			map.put(nodeMap.item(i).getNodeName(), nodeMap.item(i).getNodeValue());
+		
+		Enumeration<?> attributeNames = nodeMap.getAttributeNames();
+		while(attributeNames.hasMoreElements())
+		{
+			Object attributeName = attributeNames.nextElement();
+			Object value = nodeMap.getAttribute(attributeName);
+			if(attributeName.toString().equals(HTML.Attribute.NAME.toString())) continue;
+//			System.out.println("\t\t" + attributeName.toString() + "\t" + value.toString());
+			map.put(attributeName.toString(), value.toString());
 		}
-		String tag = node.getNodeName();
-		String content = node.getTextContent();
-		Node treeNode = new Parsed.Node(tag, map, content);
-		return treeNode;
+		
+		String tag = element.getName();
+		if(element.getName().equals(HTML.Tag.CONTENT.toString()))
+		{
+			tag = null;
+			if(map.containsKey("a"))
+			{
+				tag = "a";
+				String link = map.get("a");
+				int startIndex = link.indexOf("href=");
+				if(startIndex >= 0)
+				{
+					link = link.substring(startIndex + "href=".length());
+					link = link.trim();
+					if(link.contains(" ")) link = link.split(" ")[0];
+					map.put("href", link);
+					map.remove("a");
+				}
+			}
+		}
+		
+		String content = null;
+		if(element.isLeaf())
+		{
+			try
+			{
+				content = element.getDocument().getText(element.getStartOffset(), (element.getEndOffset()-element.getStartOffset()));
+			}
+			catch (BadLocationException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		System.out.println(tag + "\t" + map + "\t" + content);
+		return new Parsed.Node(tag, map, content);
 	}
 	
 	/**
