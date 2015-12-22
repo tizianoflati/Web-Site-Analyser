@@ -11,16 +11,13 @@ import javax.swing.text.html.HTMLEditorKit;
 import wsa.web.html.ParsedC;
 
 public class LoaderC implements Loader {
-	private Exception exception = null;
 
-	public LoaderC() {
-	}
-	
 	@Override
 	public LoadResult load(URL url) {
 
 		ParsedC parsed = null;
 		
+		Exception exception = null;
 		URLConnection connection = null;
 		
 		try
@@ -44,10 +41,12 @@ public class LoaderC implements Loader {
 		catch (IOException e)
 		{
 			e.printStackTrace();
-			this.exception = e;
+			exception = e;
 		}
-		catch (BadLocationException e) {
+		catch (BadLocationException e)
+		{
 			e.printStackTrace();
+			exception = e;
 		}
 		finally
 		{
@@ -58,6 +57,7 @@ public class LoaderC implements Loader {
 			catch (IOException e)
 			{
 				e.printStackTrace();
+				exception = e;
 			}
 		}
 		
