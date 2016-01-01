@@ -62,24 +62,26 @@ public class Gui extends Application {
         HBox.setHgrow(dominio, Priority.ALWAYS);
         hbDominio.setSpacing(20);
         
-        HBox hbUris = new HBox(uriText, uri, addButton);
+        HBox hbUris = new HBox(uriText, uri);
         HBox.setHgrow(uri, Priority.ALWAYS);
         hbUris.setSpacing(20);
         
-        VBox vb = new VBox(appName, hbDominio, hbUris, goButton);
+        VBox vb = new VBox(appName, hbDominio, hbUris, addButton, goButton);
         vb.setAlignment(Pos.TOP_CENTER);
         vb.setSpacing(30);
         vb.setStyle("-fx-background-color: grey");
         
-        // mmhhh...
+        // aggiusta la gui per ogni nuova textfield
         addButton.setOnAction( (e) -> {
+        	vb.getChildren().remove(vb.getChildren().size()-2);
         	vb.getChildren().remove(vb.getChildren().size()-1);
         	vb.getChildren().add(new TextField());
+        	vb.getChildren().add(addButton);
         	vb.getChildren().add(goButton);
         });
         
         
-        //tet di recupero uri dai vari TextField creati, pare funge
+        //test di recupero uri dai vari TextField creati, pare funge
         goButton.setOnAction( (e) -> {
         	
             System.out.println(dominio.getText());
