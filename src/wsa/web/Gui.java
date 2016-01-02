@@ -1,5 +1,8 @@
 package wsa.web;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -16,7 +19,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class Gui extends Application {
-	Node[] textfList = new TextField[3];
+	List<String> uris = new ArrayList<>();
 	
     public void start(Stage primaryStage) {
         Scene scene = new Scene(createUI(), 800, 600);
@@ -29,7 +32,7 @@ public class Gui extends Application {
     private Parent createUI() {
     	// Intestazione superiore app
         Text appName = new Text("Web site analyser");
-        appName.setFont(new Font(appName.getText(), 40));
+        appName.setFont(new Font(appName.getText(), 60));
         appName.setFill(Color.YELLOW);
         appName.setStroke(Color.BLACK);
         appName.setStrokeWidth(1);
@@ -57,16 +60,15 @@ public class Gui extends Application {
         goButton.setScaleX(2);
         goButton.setScaleY(2);
    
-        
         HBox hbDominio = new HBox(dominioText, dominio);
         HBox.setHgrow(dominio, Priority.ALWAYS);
         hbDominio.setSpacing(20);
         
-        HBox hbUris = new HBox(uriText, uri);
+        HBox hbUri = new HBox(uriText, uri);
         HBox.setHgrow(uri, Priority.ALWAYS);
-        hbUris.setSpacing(20);
+        hbUri.setSpacing(20);
         
-        VBox vb = new VBox(appName, hbDominio, hbUris, addButton, goButton);
+        VBox vb = new VBox(appName, hbDominio, hbUri, addButton, goButton);
         vb.setAlignment(Pos.TOP_CENTER);
         vb.setSpacing(30);
         vb.setStyle("-fx-background-color: grey");
@@ -75,25 +77,38 @@ public class Gui extends Application {
         addButton.setOnAction( (e) -> {
         	vb.getChildren().remove(vb.getChildren().size()-2);
         	vb.getChildren().remove(vb.getChildren().size()-1);
-        	vb.getChildren().add(new TextField());
+        	
+        	Text uriTexts = new Text("URI ->");
+        	uriTexts.setFont(new Font(uriText.getText(), 20));
+            uriTexts.setFill(Color.YELLOW);
+            uriTexts.setStroke(Color.BLACK);
+            uriTexts.setStrokeWidth(1);
+        	TextField newUri = new TextField();
+            HBox hbUris = new HBox(uriTexts, newUri);
+            HBox.setHgrow(newUri, Priority.ALWAYS);
+            hbUris.setSpacing(20);
+     
+        	vb.getChildren().add(hbUris);
         	vb.getChildren().add(addButton);
         	vb.getChildren().add(goButton);
         });
         
         
         //test di recupero uri dai vari TextField creati, pare funge
-        goButton.setOnAction( (e) -> {
-        	
-            System.out.println(dominio.getText());
-            System.out.println(uri.getText());
-            
+        goButton.setOnAction( (e) -> {        
             for(Node f : vb.getChildren()) {
-            	if( f instanceof TextField) {
-            		TextField tf = (TextField)f;
-            		System.out.println(tf.getText() );
+            	if( f instanceof HBox) { //tanto sono tutti Hbox
+            		HBox accabi = (HBox) f; //quindi casto facile
+            		for( Node g : accabi.getChildren() ){
+                       	if( g instanceof TextField) {
+                        	TextField tf = (TextField)g;
+                        	//System.out.println(tf.getText() );
+                        	uris.add(tf.getText());
+                        }
+            		}
             	}
-            }
-            
+            }       
+            for( String s : uris) System.out.println( "uri: " + s );    
             });
 
         return vb;
