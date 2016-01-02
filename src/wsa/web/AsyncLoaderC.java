@@ -8,9 +8,12 @@ import java.util.concurrent.Future;
 public class AsyncLoaderC implements AsyncLoader{
 	private ExecutorService executorService;
 
+	public AsyncLoaderC() {
+		executorService = Executors.newCachedThreadPool();
+	}
+	
 	@Override
 	public Future<LoadResult> submit(URL url) {
-		executorService = Executors.newSingleThreadExecutor();
 		return executorService.submit( () -> { 
 			return new LoaderC().load(url);
 		});

@@ -3,6 +3,7 @@ package wsa.web;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.Random;
 
 import javax.swing.text.BadLocationException;
 import javax.swing.text.html.HTMLDocument;
@@ -12,9 +13,17 @@ import wsa.web.html.ParsedC;
 
 public class LoaderC implements Loader {
 
+	public static Random rand = new Random(System.currentTimeMillis());
+	
 	@Override
 	public LoadResult load(URL url) {
 
+		try {
+			Thread.sleep(1000 * (1+rand.nextInt(5)));
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+		
 		ParsedC parsed = null;
 		
 		Exception exception = null;
@@ -23,7 +32,7 @@ public class LoaderC implements Loader {
 		try
 		{
 			// Set up the connection
-			connection = url.openConnection();			
+			connection = url.openConnection();
 			connection.setRequestProperty("Accept-Charset", "UTF-8");
 			
 			// Connect
@@ -31,7 +40,8 @@ public class LoaderC implements Loader {
 			
 			HTMLEditorKit kit = new HTMLEditorKit();
 			HTMLDocument document = (HTMLDocument) kit.createDefaultDocument();
-			kit. read(connection.getInputStream(), document, 0);
+			document.putProperty("IgnoreCharsetDirective", new Boolean(true));
+			kit.read(connection.getInputStream(), document, 0);
 			
 			System.out.println("Pagina scaricata correttamente: " + url);
 			
@@ -59,6 +69,12 @@ public class LoaderC implements Loader {
 				e.printStackTrace();
 				exception = e;
 			}
+		}
+		
+		try {
+			Thread.sleep(3000);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 		
 		return new LoadResult(url, parsed, exception);

@@ -47,7 +47,7 @@ public class ParsedC implements Parsed{
 	
 	private static Node extractNode(Element element) {
 		if(element.getName().equals(HTML.Tag.COMMENT.toString())) return null;
-//		if(element.getName().equals(HTML.Tag.IMPLIED.toString())) return null;
+		if(element.getName().equals(HTML.Tag.IMPLIED.toString())) return null;
 		
 		AttributeSet nodeMap = element.getAttributes();
 		Map<String, String> map = new HashMap<>();
@@ -94,7 +94,7 @@ public class ParsedC implements Parsed{
 				e.printStackTrace();
 			}
 		}
-		System.out.println(tag + "\t" + map + "\t" + content);
+//		System.out.println(tag + "\t" + map + "\t" + content);
 		return new Parsed.Node(tag, map, content);
 	}
 	
