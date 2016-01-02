@@ -2,6 +2,7 @@ package wsa.web;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javafx.application.Application;
 import javafx.geometry.Pos;
@@ -10,8 +11,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -20,6 +24,9 @@ import javafx.stage.Stage;
 
 public class Gui extends Application {
 	List<String> uris = new ArrayList<>();
+	String[] colorList = {"chartreuse", "coral", "deeppink", "lightgreen",
+			"gold", "mediumturquoise", "orangered", "snow",
+			"slateblue" };
 	
     public void start(Stage primaryStage) {
         Scene scene = new Scene(createUI(), 800, 600);
@@ -31,11 +38,13 @@ public class Gui extends Application {
     
     private Parent createUI() {
     	// Intestazione superiore app
-        Text appName = new Text("Web site analyser");
-        appName.setFont(new Font(appName.getText(), 60));
+        Text appName = new Text("<<----WEB SITE ANALYZER---->>");
+        appName.setFont(new Font(appName.getText(), 40));
         appName.setFill(Color.YELLOW);
         appName.setStroke(Color.BLACK);
-        appName.setStrokeWidth(1);
+        appName.setStrokeWidth(1);       
+        StackPane sp = new StackPane(appName);
+        sp.setStyle("-fx-background-color: mediumslateblue;");
     	
         // Campo dominio
     	Text dominioText = new Text("DOMINIO ->");
@@ -52,6 +61,7 @@ public class Gui extends Application {
         uriText.setFill(Color.YELLOW);
         uriText.setStroke(Color.BLACK);
         uriText.setStrokeWidth(1);
+        //uri.setStyle("-fx-background-color: mediumslateblue;");
         
         Button addButton = new Button("Add uris");
         
@@ -63,15 +73,17 @@ public class Gui extends Application {
         HBox hbDominio = new HBox(dominioText, dominio);
         HBox.setHgrow(dominio, Priority.ALWAYS);
         hbDominio.setSpacing(20);
+        hbDominio.setStyle("-fx-background-color: mediumslateblue;");
         
         HBox hbUri = new HBox(uriText, uri);
         HBox.setHgrow(uri, Priority.ALWAYS);
         hbUri.setSpacing(20);
+        hbUri.setStyle("-fx-background-color: mediumslateblue;");
         
-        VBox vb = new VBox(appName, hbDominio, hbUri, addButton, goButton);
+        VBox vb = new VBox(sp, hbDominio, hbUri, addButton, goButton);
         vb.setAlignment(Pos.TOP_CENTER);
-        vb.setSpacing(30);
-        vb.setStyle("-fx-background-color: grey");
+        vb.setSpacing(20);
+        vb.setStyle("-fx-background-color: deepskyblue");
         
         // aggiusta la gui per ogni nuova textfield
         addButton.setOnAction( (e) -> {
@@ -83,10 +95,14 @@ public class Gui extends Application {
             uriTexts.setFill(Color.YELLOW);
             uriTexts.setStroke(Color.BLACK);
             uriTexts.setStrokeWidth(1);
+            
         	TextField newUri = new TextField();
             HBox hbUris = new HBox(uriTexts, newUri);
             HBox.setHgrow(newUri, Priority.ALWAYS);
             hbUris.setSpacing(20);
+            //Da qui, tutti gli HBox dei nuovi uri avranno colori randomatici
+            Random random = new Random();
+            hbUris.setStyle("-fx-background-color: " + colorList[random.nextInt(colorList.length)]);
      
         	vb.getChildren().add(hbUris);
         	vb.getChildren().add(addButton);
