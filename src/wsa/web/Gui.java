@@ -4,8 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import javafx.animation.FadeTransition;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -18,9 +23,11 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class Gui extends Application {
 	List<String> uris = new ArrayList<>();
@@ -37,14 +44,23 @@ public class Gui extends Application {
 
     
     private Parent createUI() {
+           
     	// Intestazione superiore app
         Text appName = new Text("<<----WEB SITE ANALYZER---->>");
         appName.setFont(new Font(appName.getText(), 40));
         appName.setFill(Color.YELLOW);
         appName.setStroke(Color.BLACK);
-        appName.setStrokeWidth(1);       
+        appName.setStrokeWidth(1);
+        
         StackPane sp = new StackPane(appName);
         sp.setStyle("-fx-background-color: mediumslateblue;");
+        
+        FadeTransition ft = new FadeTransition(Duration.millis(3000), appName);
+        ft.setFromValue(1.0);
+        ft.setToValue(0.3);
+        ft.setCycleCount(Timeline.INDEFINITE);
+        ft.setAutoReverse(true);
+        ft.play();      
     	
         // Campo dominio
     	Text dominioText = new Text("DOMINIO ->");
