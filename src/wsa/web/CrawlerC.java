@@ -2,6 +2,7 @@ package wsa.web;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -74,6 +75,13 @@ public class CrawlerC implements Crawler {
 		
 		if(this.crawlerThread.getResults().isEmpty()) return Optional.of(new CrawlerResult(null, false, null, null, null)); 
 		return Optional.of(this.crawlerThread.getResults().remove(0));
+	}
+	
+	public CrawlerResult get(URI uri) {
+		for(CrawlerResult cr : crawlerThread.getResults()){
+			if( cr.uri.equals(uri) ) return cr;
+		}
+		return null;
 	}
 
 	@Override
