@@ -44,8 +44,6 @@ public class CrawlerC implements Crawler {
 		if(this.crawlerThread.getCrawlerState() == CrawlerState.CANCELLED) throw new IllegalStateException();
 		if(this.crawlerThread.getCrawlerState() == CrawlerState.RUNNING) return;
 		
-//		if(this.crawlerThread.getToLoad().isEmpty()) return;
-		
 		// If it is the first time we start the crawler
 		if(this.crawlerThread.getCrawlerState() == CrawlerState.RUNNABLE) crawlerThread.start();
 		else

@@ -13,6 +13,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import wsa.web.CrawlerC.CrawlerState;
@@ -20,7 +21,19 @@ import wsa.web.html.Parsed;
 
 public class CrawlerThread extends Thread {
 
-	private ExecutorService executor;
+	private final Set<URI> loaded = Collections.synchronizedSet(new HashSet<URI>());
+	private final Set<URI> toLoad = Collections.synchronizedSet(new HashSet<URI>());
+	private final Set<URI> errors = Collections.synchronizedSet(new HashSet<URI>());
+	private final List<CrawlerResult> results = Collections.synchronizedList(new ArrayList<CrawlerResult>());
+	
+	private final Boolean lock = false;
+
+	private CrawlerState state;
+	private Predicate<URI> predicate = (u) -> {return false;};
+	private AsyncLoader loader;
+
+	private ExecutorService resultThreadsExecutor;
+	
 	public CrawlerThread(AsyncLoader loader)
 	{
 		this(loader, null, null, null, null);
@@ -40,7 +53,7 @@ public class CrawlerThread extends Thread {
 		if(errs != null) this.errors.addAll(errs);
 		if(pageLink != null) this.predicate = pageLink;
 		
-		this.executor = Executors.newCachedThreadPool();
+		this.resultThreadsExecutor = Executors.newCachedThreadPool();
 	}
 
 	synchronized public CrawlerState getCrawlerState()
@@ -50,29 +63,67 @@ public class CrawlerThread extends Thread {
 
 	synchronized public void setCrawlerState(CrawlerState newState)
 	{
+		setCrawlerState(newState, false);
+	}
+	synchronized public void setCrawlerState(CrawlerState newState, boolean wait)
+	{
 		System.out.println("SETTING STATE TO: " + newState);
 		this.state = newState;
 
+		if(newState == CrawlerState.SUSPENDED)
+		{
+			synchronized (lock) {
+				try {
+					System.out.println("CRAWLER IS GOING TO SUSPEND.");
+					lock.wait();
+					System.out.println("WAKENED UP!");
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		// In case the crawler has been suspended
+		if(newState == CrawlerState.SUSPENDED || newState == CrawlerState.CANCELLED)
+		{
+			// All the sub-threads which are trying to download the URLs are cancelled
+			// TODO: check that the sub-thread gets notified and really terminated.
+			
+			
+			resultThreadsExecutor.shutdownNow();
+			
+			// And the main crawler thread waits for the sub-threads to finish
+			try
+			{
+				resultThreadsExecutor.awaitTermination(15, TimeUnit.SECONDS);
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+			
+			// If the crawler has also been cancelled, also the thread waiting for results should be stoppped
+			if(newState == CrawlerState.CANCELLED)
+			{
+				this.loader.shutdown();
+			}
+		}
+		
+		if(newState == CrawlerState.CANCELLED)
+		{
+			System.out.println("CRAWLER HAS BEEN CANCELLED. EXITING.");
+			loader.shutdown();
+		}
+		
 		if(newState != CrawlerState.SUSPENDED)
 			synchronized (lock) {
 				lock.notify();
 			}
 	}
-
-	private Set<URI> loaded = Collections.synchronizedSet(new HashSet<URI>());
-	private Set<URI> toLoad = Collections.synchronizedSet(new HashSet<URI>());
-	private Set<URI> errors = Collections.synchronizedSet(new HashSet<URI>());
-
-	public Boolean lock = false;
-
-	private CrawlerState state;
-	private Predicate<URI> predicate = (u) -> {return false;};
-	private AsyncLoader loader;
-
-	private List<CrawlerResult> results = Collections.synchronizedList(new ArrayList<CrawlerResult>());
+	
 	public void run()
 	{
-		System.out.println("NEW THREAD: " + Thread.currentThread().getName());
+		System.out.println("NEW THREAD: " + Thread.currentThread().getName() + ". " + "NUMERO DI THREAD ATTIVI: " + Thread.activeCount());
 
 		setCrawlerState(CrawlerState.RUNNING);
 
@@ -80,45 +131,32 @@ public class CrawlerThread extends Thread {
 		{
 			try
 			{
-				if(getCrawlerState() == CrawlerState.CANCELLED)
-				{
-					System.out.println("CRAWLER HAS BEEN CANCELLED. EXITING.");
-					loader.shutdown();
-					return;
-				}
+				if(getCrawlerState() == CrawlerState.CANCELLED) break;
 
 				if(toLoad.isEmpty())
 				{
 					System.out.println("QUEUE IS EMPTY. FORCING SUSPENDED STATE.");
-					setCrawlerState(CrawlerState.SUSPENDED);
+					setCrawlerState(CrawlerState.SUSPENDED, true);
 				}
-
-				if(state == CrawlerState.SUSPENDED)
-					synchronized (lock) {
-						try {
-							System.out.println("CRAWLER IS GOING TO SUSPEND.");
-							lock.wait();
-							System.out.println("WAKENED UP!");
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
 
 				if(toLoad.isEmpty()) continue;
 
 				System.out.println("|QUEUE| = " + toLoad.size());
 				System.out.println("EXTRACTING NEXT URI...");
 				URI uri = toLoad.iterator().next();
-				toLoad.remove(uri);
 				System.out.println("|QUEUE| = " + toLoad.size());
 
-				if(!uri.isAbsolute()) continue;
+				if(!uri.isAbsolute())
+				{
+					toLoad.remove(uri);
+					continue;
+				}
 
 				System.out.println("DOWNLOADING:" + uri);
 
 				Future<LoadResult> future = loader.submit(uri.toURL());
 
-				executor.submit(() ->{
+				resultThreadsExecutor.submit(() ->{
 					try{
 						LoadResult loadResult = future.get();
 						
@@ -128,6 +166,8 @@ public class CrawlerThread extends Thread {
 	
 						if(loadResult.exc != null) errors.add(uri);
 						else loaded.add(uri);
+						
+						toLoad.remove(uri);
 	
 						boolean linkPage = false;
 						List<URI> links = null;

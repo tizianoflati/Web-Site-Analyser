@@ -1,6 +1,8 @@
 package wsa.web;
 
 import java.io.File;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -8,12 +10,11 @@ import java.util.Map;
 import java.util.Random;
 
 import javafx.application.Application;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -21,11 +22,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
@@ -65,19 +63,19 @@ public class GuiNew extends Application{
 	//Classe simulativa per i risultati crawlerResults
 	public class LinkResult {
 	    private final SimpleStringProperty urlName;
-	 
-	    private LinkResult(String url) {
-	        this.urlName = new SimpleStringProperty(url);
+	    private final SimpleBooleanProperty linkPage;
+	    private final SimpleStringProperty exception;
+	    
+	    private LinkResult(CrawlerResult result) {
+	        this.urlName = new SimpleStringProperty(result.uri.toString());
+	        this.linkPage = new SimpleBooleanProperty(result.linkPage);
+	        this.exception = new SimpleStringProperty(result.exc == null ? "" : result.exc.toString());
 	    }
 	    
 	    public SimpleStringProperty getUrlName() {
 	    	return urlName;
 	    }
 	 
-	    public String getUrl() {
-	        return urlName.get();
-	    }
-	    
 	    public void setUrl(String url) {
 	        this.urlName.set(url);
 	    }
@@ -211,7 +209,6 @@ public class GuiNew extends Application{
     	// CENTER -------------------------------------
 		
 		Text websiteT = new Text("Website " + currentWebsite);
-		TextField websiteTf = new TextField();
 		websiteT.setFont(new Font(websiteT.getText(), 20));
 		websiteT.setFill(Color.YELLOW);
 		websiteT.setStroke(Color.BLACK);
@@ -334,34 +331,42 @@ public class GuiNew extends Application{
         return vb;
     }
     
-    private Parent createTableView(String title) {
-    	TableView table = new TableView();
+    private Parent createTableView(String title)
+    {
+    	TableView<LinkResult> table = new TableView<LinkResult>();
     	table.setPrefWidth(Double.MAX_VALUE);
 
-    	ObservableList<LinkResult> data = FXCollections.observableArrayList(
-    			new LinkResult("http://www.multiplayer.it"),
-    			new LinkResult("http://www.eurogamer.it"));
+		try
+		{
+			ObservableList<LinkResult> data = FXCollections.observableArrayList(
+					new LinkResult(new CrawlerResult(new URI("http://www.multiplayer.it"), false, null, null, null))
+//    			new LinkResult("http://www.eurogamer.it")
+					);
+			
+			table.setItems(data);
+		}
+		catch (URISyntaxException e1)
+		{
+			e1.printStackTrace();
+		}
     	
     	Label label = new Label(title);
         label.setFont(new Font("Arial", 20));
  
         table.setEditable(true);
  
-        TableColumn urlNameCol = new TableColumn("URL");
+        TableColumn<LinkResult, String> urlNameCol = new TableColumn<LinkResult, String>("URL");
         urlNameCol.setMinWidth(100);
-        //urlNameCol.setCellValueFactory( new PropertyValueFactory<LinkResult, String>("url"));
         urlNameCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, String>, ObservableValue<String>>() {
-            public ObservableValue<String> call(CellDataFeatures<LinkResult, String> p) {
-                // p.getValue() returns the Person instance for a particular TableView row
-                return p.getValue().getUrlName();
+            public ObservableValue<String> call(CellDataFeatures<LinkResult, String> linkResultCell) {
+                return linkResultCell.getValue().getUrlName();
             }
          });
         
-        TableColumn testCol = new TableColumn("test");
-        testCol.setMinWidth(100);
-   
-        table.setItems(data);
-        table.getColumns().addAll(urlNameCol, testCol);
+        table.getColumns().add(urlNameCol);
+        
+//        TableColumn testCol = new TableColumn("test");
+//      testCol.setMinWidth(100);
  
         final VBox vbox = new VBox();
         vbox.setSpacing(5);
@@ -370,10 +375,8 @@ public class GuiNew extends Application{
         
         Group group = new Group(vbox);
         
-        //urlNameCol.setCellFactory
-        
         table.setOnContextMenuRequested( e -> {
-        	we.load((String)table.getSelectionModel().getSelectedItem());
+        	we.load((String)table.getSelectionModel().getSelectedItem().getUrlName().get());
         	Stage stage = new Stage();
         	Scene scene = new Scene(wView, 400, 600);
         	stage.setScene(scene);

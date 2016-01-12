@@ -7,15 +7,18 @@ import java.util.concurrent.Future;
 
 public class AsyncLoaderC implements AsyncLoader{
 	private ExecutorService executorService;
+	private Loader loader;
 
-	public AsyncLoaderC() {
+	public AsyncLoaderC(Loader loader) {
+		this.loader = loader;
+		
 		executorService = Executors.newCachedThreadPool();
 	}
 	
 	@Override
 	public Future<LoadResult> submit(URL url) {
 		return executorService.submit( () -> { 
-			return new LoaderC().load(url);
+			return loader.load(url);
 		});
 	}
 
