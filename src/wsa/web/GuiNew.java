@@ -98,8 +98,14 @@ public class GuiNew extends Application{
 			this.seedList = seedList;
 		}
 		
+		public void setVBox(VBox vb) {
+			this.vb = vb;
+		}
+		
 		public List<String> getSeedList() { return seedList; }
+		
 		public VBox getVBox() { return vb; }
+		
 		public Parent getTable() { return table; }
 		
 	}
@@ -202,7 +208,15 @@ public class GuiNew extends Application{
 	}
     
 	private VBox createCenter() {
-    	// CENTER -------------------------------------       
+    	// CENTER -------------------------------------
+		
+		Text websiteT = new Text("Website " + currentWebsite);
+		TextField websiteTf = new TextField();
+		websiteT.setFont(new Font(websiteT.getText(), 20));
+		websiteT.setFill(Color.YELLOW);
+		websiteT.setStroke(Color.BLACK);
+		websiteT.setStrokeWidth(1);
+		
     	// Campo dominio
 		Text dominioText = new Text("DOMINIO ->");
 		TextField dominio = new TextField();
@@ -229,7 +243,7 @@ public class GuiNew extends Application{
 		hbUri.setSpacing(20);
 		hbUri.setStyle("-fx-background-color: mediumslateblue;");
 		
-		VBox vbCenter = new VBox(hbDominio, hbUri);
+		VBox vbCenter = new VBox(websiteT, hbDominio, hbUri);
 		vbCenter.setAlignment(Pos.TOP_CENTER);
 		vbCenter.setSpacing(20);
 		vbCenter.setStyle("-fx-background-color: deepskyblue");
@@ -249,7 +263,14 @@ public class GuiNew extends Application{
         vb.setStyle("-fx-background-color: darkturquoise");
         
         goB.setOnAction( (e) -> {
+        	VBox nvb = new VBox(addSeedB, goB);
+            nvb.setPrefWidth(100);
+            nvb.setSpacing(20);
+            nvb.setAlignment(Pos.TOP_CENTER);
+            nvb.setStyle("-fx-background-color: darkturquoise");
         	WebsiteState wss = stateMap.get(currentWebsite);
+        	wss.setVBox(nvb);
+        	borderPane.setRight(nvb);
         	System.out.println(currentWebsite);
         	ScrollPane spCenter = new ScrollPane(wss.getTable());
         	borderPane.setCenter(spCenter);
