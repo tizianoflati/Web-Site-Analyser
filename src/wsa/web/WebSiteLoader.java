@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.util.Map;
 import java.util.Set;
 
 public class WebSiteLoader {
 	
-	public void load(Set<URI> loaded, Set<URI> toLoad, Set<URI> errs, File dir, URI name) {
+	public static void load(Map<URI, CrawlerResult> crawlerResultsMap, Set<URI> loaded, Set<URI> toLoad, Set<URI> errs, File dir, URI name) {
 		File file = new File(dir, name.toString() + ".wsa" );
 		BufferedReader bufferedReader;
 		try {
