@@ -5,10 +5,10 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -103,12 +103,12 @@ public class WebFactoryWSA extends WebFactory{
     		Set<URI> loaded = new HashSet<URI>();
     		Set<URI> toLoad = new HashSet<URI>();
     		Set<URI> errs = new HashSet<URI>();
-    		Map<URI, CrawlerResult> crawlerResultsMap = new HashMap<URI, CrawlerResult>();
+    		List<CrawlerResult> crawlerResultsList = new ArrayList<CrawlerResult>();
     		
     		// Load from disk
-    		WebSiteLoader.load(crawlerResultsMap, loaded, toLoad, errs, dir.toFile(), dom);
+    		WebSiteLoader.load(crawlerResultsList, loaded, toLoad, errs, dir.toFile(), dom);
     		
-    		return new SiteCrawlerC(getCrawler(loaded, toLoad, errs, pageLink), dir, crawlerResultsMap);
+    		return new SiteCrawlerC(getCrawler(loaded, toLoad, errs, pageLink), dir, crawlerResultsList);
     	}
     	
     	return null;

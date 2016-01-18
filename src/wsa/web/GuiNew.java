@@ -15,6 +15,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -24,10 +25,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -36,29 +39,25 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
-import javafx.scene.web.WebEngine;
-import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
+import wsa.web.GuiNew.LinkResult;
 
 public class GuiNew extends Application{
 	private List<String> uris = new ArrayList<>();
 	private String[] colorList = {"chartreuse", "coral", "deeppink", "lightgreen",
 			"gold", "mediumturquoise", "orangered", "snow",
 			"slateblue" };
-	private File selectedDirectory;
-	private Scene infoScene;
-	private Stage infoStage;
 	private Integer currentWebsite = 1;
 	private Integer websiteNumber = 1;
+	private File selectedDirectory;
 	// siteMap associa ogni bottone ad un numero che rappresenta il sito web da esplorare
 	private Map<Button, Integer> siteMap = new HashMap<Button, Integer>();
 	// stateMap associa sitoWeb con un suo stato (tabella, situazione bottoni personalizzata ecc..)
 	private Map<Integer, WebsiteState> stateMap = new HashMap<Integer, WebsiteState>();
 	private BorderPane borderPane = new BorderPane();
-	private WebEngine we;
-	private WebView wView;
+
 	
 	//Classe simulativa per i risultati crawlerResults
 	public class LinkResult {
@@ -117,8 +116,6 @@ public class GuiNew extends Application{
 	}
 		
     private Parent createUI() {
-        wView = new WebView();
-        we = wView.getEngine();
     	
     	// TOP
         Text addUriText = new Text("WEB SITE ANALYZER");
@@ -175,6 +172,7 @@ public class GuiNew extends Application{
             System.out.println("stateMap: " + stateMap);
             
         	newWebsiteB.setOnAction( f -> {
+        		
         		currentWebsite = siteMap.get(newWebsiteB);
         		System.out.println("current website number selected: " + currentWebsite);
         		WebsiteState wss = stateMap.get(currentWebsite);
@@ -365,6 +363,10 @@ public class GuiNew extends Application{
         
         table.getColumns().add(urlNameCol);
         
+        TableCell<LinkResult, String> cell;
+        
+        //table.setSelectionModel(value);
+        
 //        TableColumn testCol = new TableColumn("test");
 //      testCol.setMinWidth(100);
  
@@ -375,13 +377,46 @@ public class GuiNew extends Application{
         
         Group group = new Group(vbox);
         
-        table.setOnContextMenuRequested( e -> {
-        	we.load((String)table.getSelectionModel().getSelectedItem().getUrlName().get());
-        	Stage stage = new Stage();
-        	Scene scene = new Scene(wView, 400, 600);
-        	stage.setScene(scene);
-        	stage.show();
+        /**
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            //if (newSelection != null) {
+            	System.out.println("cell cliccked");
+                WebView wView = new WebView();
+                WebEngine we = wView.getEngine();
+                
+            	we.load((String)table.getSelectionModel().getSelectedItem().getUrlName().get());
+            	Stage stage = new Stage();
+            	Scene scene = new Scene(wView, 600, 400);
+            	stage.setScene(scene);
+            	stage.show();
+            //}
         });
+        **/
+        
+        
+        /** PERMETTE DI EDITARE LA TABELLA
+        urlNameCol.setCellFactory(TextFieldTableCell.forTableColumn());
+        urlNameCol.setOnEditCommit(
+            new EventHandler<CellEditEvent<LinkResult, String>>() {
+                @Override
+                public void handle(CellEditEvent<LinkResult, String> t) {
+                    String url = ((LinkResult) t.getTableView().getItems().get(
+                        t.getTablePosition().getRow())
+                        ).getUrlName().getName();
+                    
+                	System.out.println("cell cliccked");
+                    WebView wView = new WebView();
+                    WebEngine we = wView.getEngine();
+                    
+                	we.load(url);
+                	Stage stage = new Stage();
+                	Scene scene = new Scene(wView, 600, 400);
+                	stage.setScene(scene);
+                	stage.show();
+                }
+            }
+        );
+        */
         
         return group;
 	}

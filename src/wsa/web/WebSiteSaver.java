@@ -25,6 +25,8 @@ public class WebSiteSaver {
 			Set<URI> scaricati = new HashSet<>();
 			scaricati.addAll(siteCrawler.getLoaded());
 			scaricati.addAll(siteCrawler.getErrors());
+			// TODO aggiungo size di scaricati??
+			writer.write(scaricati.size() + newLine);			
 			for(URI u : scaricati){
 				CrawlerResult r = siteCrawler.get(u);
 				writer.write(u.toString() + newLine);
@@ -35,9 +37,14 @@ public class WebSiteSaver {
 				writer.write(r.errRawLinks.size() + newLine);
 				for(String s : r.errRawLinks)
 					writer.write(s + newLine);
-				writer.write(r.exc.toString() + newLine);
-				writer.write(r.exc.getMessage() + newLine);
 				
+				if( r.exc != null) {
+					writer.write(r.exc.toString() + newLine);
+					writer.write(r.exc.getMessage() + newLine);
+				}
+				else {
+					writer.write(newLine);
+				}
 			}			
 			writer.close();
 		} catch (IOException e) {

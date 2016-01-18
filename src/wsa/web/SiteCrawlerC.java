@@ -2,23 +2,23 @@ package wsa.web;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-
-import wsa.web.CrawlerC.CrawlerState;
 
 public class SiteCrawlerC implements SiteCrawler{
 	
 	private Crawler crawler;
 	private ScheduledThreadPoolExecutor saver;
 	private Runnable saverRunnable;
-	private Map<URI, CrawlerResult> crawlerResultMap = new HashMap<URI, CrawlerResult>();
+	//private Map<URI, CrawlerResult> crawlerResultMap = new HashMap<URI, CrawlerResult>();
+	private List<CrawlerResult> crawlerResultList = new ArrayList<>();
+	private int times = 0;
 	
     static boolean checkDomain(URI dom) {
     	if( !dom.isAbsolute() ) return false;
@@ -39,12 +39,12 @@ public class SiteCrawlerC implements SiteCrawler{
     public SiteCrawlerC(Crawler crawler, Path dir) {
     	this(crawler, dir, null);
 	}
-	public SiteCrawlerC(Crawler crawler, Path dir, Map<URI, CrawlerResult> crawlerResultsMap) {
+	public SiteCrawlerC(Crawler crawler, Path dir, List<CrawlerResult> crawlerResultsList) {
 		this.crawler = crawler;
 		
 		if(dir != null) this.saver = new ScheduledThreadPoolExecutor(1);
 		
-		if(crawlerResultsMap != null) this.crawlerResultMap  = crawlerResultsMap;
+		if(crawlerResultsList != null) this.crawlerResultList  = crawlerResultsList;
 	}
 
 	@Override
@@ -78,14 +78,35 @@ public class SiteCrawlerC implements SiteCrawler{
 
 	@Override
 	public Optional<CrawlerResult> get() {
-		return crawler.get();
+		int crawlerResultSize = crawlerResultList.size();
+		if(times < crawlerResultSize){
+			CrawlerResult cr = crawlerResultList.get(times);
+			times++;
+			return Optional.of(cr);
+		}
+		Optional<CrawlerResult> optional = crawler.get();
+		if( optional.isPresent() ) {
+			crawlerResultList.add(optional.get());
+			times++;
+		}
+		return optional;
 	}
 
 	@Override
 	public CrawlerResult get(URI uri) {
 		if( !this.getLoaded().contains(uri) && !this.getErrors().contains(uri)) throw new IllegalArgumentException();		
-		// TODO
-		return null; 
+		for(CrawlerResult cr : crawlerResultList) 
+			if( cr.uri.equals(uri))
+				return cr;
+		
+		CrawlerResult last = null;
+		do {
+			Optional<CrawlerResult> optional = crawler.get();
+			last = optional.get();
+			crawlerResultList.add(last);
+		} while( !last.uri.equals(uri) );
+		
+		return last; 
 	}
 
 	@Override

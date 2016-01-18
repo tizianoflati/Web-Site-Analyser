@@ -75,12 +75,6 @@ public class CrawlerC implements Crawler {
 		return Optional.of(this.crawlerThread.getResults().remove(0));
 	}
 	
-	public CrawlerResult get(URI uri) {
-		for(CrawlerResult cr : crawlerThread.getResults()){
-			if( cr.uri.equals(uri) ) return cr;
-		}
-		return null;
-	}
 
 	@Override
 	public Set<URI> getLoaded() {
