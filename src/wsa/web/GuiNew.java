@@ -9,13 +9,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import com.sun.prism.impl.Disposer.Record;
+
 import javafx.application.Application;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -30,7 +31,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -42,7 +42,6 @@ import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import wsa.web.GuiNew.LinkResult;
 
 public class GuiNew extends Application{
 	private List<String> uris = new ArrayList<>();
@@ -68,7 +67,7 @@ public class GuiNew extends Application{
 	    private LinkResult(CrawlerResult result) {
 	        this.urlName = new SimpleStringProperty(result.uri.toString());
 	        this.linkPage = new SimpleBooleanProperty(result.linkPage);
-	        this.exception = new SimpleStringProperty(result.exc == null ? "" : result.exc.toString());
+	        this.exception = new SimpleStringProperty(result.exc == null ? "OK" : result.exc.toString() + ": " + result.exc.getMessage());
 	    }
 	    
 	    public SimpleStringProperty getUrlName() {
@@ -78,11 +77,15 @@ public class GuiNew extends Application{
 	    public void setUrl(String url) {
 	        this.urlName.set(url);
 	    }
+
+		public ObservableValue<String> getStatus() {
+			return this.exception;
+		}
       
 	}
 
 	public class WebsiteState {
-		private List<String> seedList;
+		private List<String> seedList = new ArrayList<>();
 		private VBox vb;
 		private Parent table;
 		
@@ -323,7 +326,25 @@ public class GuiNew extends Application{
             Random random = new Random();
             hbUris.setStyle("-fx-background-color: " + colorList[random.nextInt(colorList.length)]);
      
-        	vbCenter.getChildren().add(hbUris);
+            if( true ) {
+              	Stage stage = new Stage();
+            	Button addseednw = new Button("Add uri");
+            		addseednw.setOnAction( e2 -> {
+            			WebsiteState wss = stateMap.get(currentWebsite);
+            			wss.getSeedList().add(newUri.getText());
+            			System.out.println(wss.getSeedList());
+            		});
+            	VBox vbnw = new VBox(hbUris, addseednw);
+            	vbnw.setAlignment(Pos.CENTER);
+            	vbnw.setSpacing(20);
+                Scene scene = new Scene(vbnw, 400, 300);
+                stage.setScene(scene);
+                stage.setTitle("");
+                stage.show();
+            }
+            else
+            	vbCenter.getChildren().add(hbUris);
+        	
         });
         
         return vb;
@@ -360,8 +381,49 @@ public class GuiNew extends Application{
                 return linkResultCell.getValue().getUrlName();
             }
          });
+        TableColumn<LinkResult, String> statusCol = new TableColumn<LinkResult, String>("STATUS");
+        statusCol.setMinWidth(100);
+        statusCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, String>, ObservableValue<String>>() {
+            public ObservableValue<String> call(CellDataFeatures<LinkResult, String> linkResultCell) {
+                return linkResultCell.getValue().getStatus();
+            }
+         });
+        TableColumn<LinkResult, Boolean> detailedCol = new TableColumn<LinkResult, Boolean>("DETAILS");
+        detailedCol.setMinWidth(100);
+        //detailedCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, String>, ObservableValue<String>>() {
+          //  public ObservableValue<String> call(CellDataFeatures<LinkResult, String> linkResultCell) {
+            //    return linkResultCell.getValue().getStatus();
+            //}
+        // });
+        detailedCol.setCellFactory(
+                new Callback<TableColumn<LinkResult, Boolean>, TableCell<LinkResult, Boolean>>() {
+ 
+            @Override
+            public TableCell<LinkResult, Boolean> call(TableColumn<LinkResult, Boolean> p) {
+                return new TableCell<LinkResult, Boolean>() {
+                	Button button = new Button("detail");
+
+                	{
+                		button.setOnAction( e -> {
+                			System.out.println("detailed clicked!!! ");
+                		});
+                	}
+                	
+                    //Display button if the row is not empty
+                    @Override
+                    protected void updateItem(Boolean t, boolean empty) {
+                        super.updateItem(t, empty);
+                        if(!empty){
+                            setGraphic(button);
+                        }
+                    }
+                };
+           }
+            });
         
         table.getColumns().add(urlNameCol);
+        table.getColumns().add(statusCol);
+        table.getColumns().add(detailedCol);
         
         TableCell<LinkResult, String> cell;
         
