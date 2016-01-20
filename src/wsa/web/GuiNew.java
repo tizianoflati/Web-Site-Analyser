@@ -1,8 +1,10 @@
 package wsa.web;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,15 +52,16 @@ public class GuiNew extends Application{
 			"slateblue" };
 	private Integer currentWebsite = 1;
 	private Integer websiteNumber = 1;
-	private File selectedDirectory;
+	private File selectedDirectory = null;
 	// siteMap associa ogni bottone ad un numero che rappresenta il sito web da esplorare
 	private Map<Button, Integer> siteMap = new HashMap<Button, Integer>();
 	// stateMap associa sitoWeb con un suo stato (tabella, situazione bottoni personalizzata ecc..)
 	private Map<Integer, WebsiteState> stateMap = new HashMap<Integer, WebsiteState>();
 	private BorderPane borderPane = new BorderPane();
+	private WebFactoryWSA webFactory = new WebFactoryWSA();
 
 	
-	//Classe simulativa per i risultati crawlerResults
+	/**Classe simulativa per i risultati crawlerResults */
 	public class LinkResult {
 	    private final SimpleStringProperty urlName;
 	    private final SimpleBooleanProperty linkPage;
@@ -84,29 +87,73 @@ public class GuiNew extends Application{
       
 	}
 
+	/** 
+	 * Un oggetto che rappresenta lo stato di una singola esplorazione di un sito web
+	 * quello che serve graficamente come stato è solo la tabella dei dati ed i bottoni
+	 * della parte destra della GUI
+	 */
 	public class WebsiteState {
 		private List<String> seedList = new ArrayList<>();
-		private VBox vb;
-		private Parent table;
+		private VBox rightVb;
+		private VBox centerVb;
+		private Parent table = null;
+		private SiteCrawler siteCrawler = null;
+		private Path path = null;
+		private boolean isStarted = false;
 		
-		public WebsiteState(Parent table, VBox vb) {
+		/**
+		 * 
+		 * @param table la tabella relativo al webSite
+		 * @param vb la parte destra della GUI
+		 */
+		public WebsiteState(Parent table, VBox centerVb, VBox rightVb) {
 			this.table = table;
-			this.vb = vb;
+			this.rightVb = rightVb;
+			this.centerVb = centerVb;
 		}
 		
 		public void setseedList(List<String> seedList) {
 			this.seedList = seedList;
 		}
 		
-		public void setVBox(VBox vb) {
-			this.vb = vb;
+		public void setRightVBox(VBox rightVb) {
+			this.rightVb = rightVb;
+		}
+		
+		public void setPath(Path path){
+			this.path = path;
+		}
+		
+		public void start(Path dir){
+			
+			try {
+				siteCrawler = webFactory.getSiteCrawler(new URI(seedList.get(0)), dir);
+				isStarted = true;
+				//siteCrawler.start();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (URISyntaxException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		public boolean isStarted() {
+			return isStarted;
 		}
 		
 		public List<String> getSeedList() { return seedList; }
 		
-		public VBox getVBox() { return vb; }
+		public VBox getRightVBox() { return rightVb; }
+		
+		public VBox getCenterVBox() { return centerVb; }
 		
 		public Parent getTable() { return table; }
+		
+		//per test
+		public void showInfo() {
+			System.out.println("SeedList: " + seedList);
+			System.out.println("Path: " + path);
+		}
 		
 	}
 	
@@ -140,23 +187,35 @@ public class GuiNew extends Application{
     		currentWebsite = siteMap.get(websiteB);
     		System.out.println("current website number selected: " + currentWebsite);
     		WebsiteState wss = stateMap.get(currentWebsite);
-    		System.out.println("wss: " + wss);
     		
-    		borderPane.setCenter(new ScrollPane(wss.getTable()));       		
-    		borderPane.setRight(wss.getVBox());
-        }); 
-        	VBox vbCenterBase = createCenter();        	
+    		// test
+    		//System.out.println("wss: " + wss);
+    		System.out.println("WebSite  " + currentWebsite + ":");
+    		wss.showInfo();
+    		
+    		if( wss.isStarted() ){
+    			borderPane.setCenter(new ScrollPane(wss.getTable()));       		
+    		}
+    		else {
+    			borderPane.setCenter(wss.getCenterVBox());
+    		}
+    		borderPane.setRight(wss.getRightVBox());
+    		
+    	}); 
+        	
+        VBox vbCenterBase = createCenter();        	
     		ScrollPane spCenter = new ScrollPane(vbCenterBase);
     		spCenter.setFitToWidth(true);  // Per far sì che il contenitore spCenter
     		spCenter.setFitToHeight(true); // occupi tutto lo spazio disponibile 
-    		// END CENTER
-        WebsiteState wss1 = new WebsiteState(createTableView("Website " + websiteNumber), createRightUi(vbCenterBase));
-        stateMap.put(currentWebsite, wss1);       
+    		
+        WebsiteState wss1 = new WebsiteState(createTableView("Website " + websiteNumber), createCenter(), createRightUi(vbCenterBase));
+        stateMap.put(currentWebsite, wss1);   
+        
         VBox vbLeft = new VBox(addSiteB, websiteB);
         vbLeft.setPrefWidth(100);
         vbLeft.setSpacing(20);
         vbLeft.setAlignment(Pos.TOP_CENTER);
-        //vbLeft.setStyle("-fx-background-color: black");        
+        vbLeft.setStyle("-fx-background-color: black");        
         ScrollPane spLeft = new ScrollPane(vbLeft);
         spLeft.setFitToWidth(true);
         spLeft.setFitToHeight(true);       
@@ -169,7 +228,7 @@ public class GuiNew extends Application{
         	borderPane.setCenter(vbCenter);
         	borderPane.setRight(vbRight);
         	Button newWebsiteB = new Button("Website " + websiteNumber);        	
-            WebsiteState nwss = new WebsiteState(createTableView("Website " + websiteNumber), createRightUi(vbCenter));
+            WebsiteState nwss = new WebsiteState(createTableView("Website " + websiteNumber), createCenter(), createRightUi(vbCenter));
             stateMap.put(websiteNumber, nwss);
             
             System.out.println("stateMap: " + stateMap);
@@ -179,9 +238,19 @@ public class GuiNew extends Application{
         		currentWebsite = siteMap.get(newWebsiteB);
         		System.out.println("current website number selected: " + currentWebsite);
         		WebsiteState wss = stateMap.get(currentWebsite);
-        		System.out.println("wss: " + wss);            	
-            	borderPane.setCenter(new ScrollPane(wss.getTable()));       		       		
-        		borderPane.setRight(wss.getVBox());
+        		
+        		//TEST
+        		System.out.println("WebSite  " + currentWebsite + ":");
+        		wss.showInfo();
+        		
+        		if( wss.isStarted() ){
+        			borderPane.setCenter(new ScrollPane(wss.getTable()));       		
+        		}
+        		else {
+        			borderPane.setCenter(wss.getCenterVBox());
+        		}
+        		borderPane.setRight(wss.getRightVBox());
+
         	});
         	vbLeft.getChildren().add( newWebsiteB );
         	siteMap.put(newWebsiteB, websiteNumber);
@@ -260,25 +329,7 @@ public class GuiNew extends Application{
         vb.setAlignment(Pos.TOP_CENTER);
         vb.setStyle("-fx-background-color: darkturquoise");
         
-        goB.setOnAction( (e) -> {
-        	VBox nvb = new VBox(addSeedB, goB);
-            nvb.setPrefWidth(100);
-            nvb.setSpacing(20);
-            nvb.setAlignment(Pos.TOP_CENTER);
-            nvb.setStyle("-fx-background-color: darkturquoise");
-        	WebsiteState wss = stateMap.get(currentWebsite);
-        	wss.setVBox(nvb);
-        	borderPane.setRight(nvb);
-        	System.out.println(currentWebsite);
-        	ScrollPane spCenter = new ScrollPane(wss.getTable());
-        	borderPane.setCenter(spCenter);
-        	if(goB.getText().equalsIgnoreCase("PAUSE")) {
-        		goB.setText("RESUME");
-        	}
-        	else {
-        		goB.setText("PAUSE");
-        	}
-        	
+        goB.setOnAction( (e) -> {        	
         	uris = new ArrayList<>();
             for(Node f : vbCenter.getChildren()) {
             	if( f instanceof HBox) { //tanto sono tutti Hbox
@@ -294,8 +345,61 @@ public class GuiNew extends Application{
             }       
             for( String s : uris) System.out.println( "uri: " + s );    
             
-        	
-        	stateMap.get(currentWebsite).setseedList(uris);
+        	if( uris.get(0).isEmpty() || uris.get(1).isEmpty() ) {
+        		Stage stage = new Stage();
+        		
+        		Text text = new Text("Dati insufficienti!");
+        		text.setTextAlignment(TextAlignment.CENTER);
+        		
+        		Button button = new Button("Ok");
+        		button.setOnAction( e2 -> {
+        			stage.close();
+        		});
+        		
+        		VBox vbPop = new VBox(text, button);
+        		vbPop.setAlignment(Pos.CENTER);
+        		vbPop.setSpacing(10);
+        		
+        		Scene scene = new Scene(vbPop, 50, 50);
+        	    stage.setScene(scene);
+        	    stage.show();
+           	}
+        	else {
+            	//aggiorna la VBox per levare il tasto "save"
+            	VBox nvb = new VBox(addSeedB, goB);
+                nvb.setPrefWidth(100);
+                nvb.setSpacing(20);
+                nvb.setAlignment(Pos.TOP_CENTER);
+                nvb.setStyle("-fx-background-color: darkturquoise");
+            	
+            	if(goB.getText().equalsIgnoreCase("PAUSE")) {
+            		goB.setText("RESUME");
+            	}
+            	else {
+            		goB.setText("PAUSE");
+            	}
+                //carica lo stato associato al webSite e...
+            	WebsiteState wss = stateMap.get(currentWebsite);
+            	//..setta la nuova parte destra di GUI
+            	wss.setRightVBox(nvb);
+            	//setta gli uri forniti
+            	wss.setseedList(uris);
+            	
+            	wss.showInfo();
+            	
+            	//START
+            	if(selectedDirectory == null)
+            		wss.start(null);
+            	else
+            		wss.start(selectedDirectory.toPath());
+            	
+            	//aggiorna il borderPane con i dati nuovi
+            	borderPane.setRight(nvb);
+            	System.out.println(currentWebsite);
+            	ScrollPane spCenter = new ScrollPane(wss.getTable());
+            	borderPane.setCenter(spCenter);
+        	}
+        		
         	
         });
 
@@ -308,6 +412,7 @@ public class GuiNew extends Application{
             if (selectedDirectory != null) {
             	this.selectedDirectory = selectedDirectory;
                 System.out.println(selectedDirectory.getAbsolutePath()); //Test
+                stateMap.get(currentWebsite).setPath(selectedDirectory.toPath());
             }
         });
         
@@ -326,20 +431,23 @@ public class GuiNew extends Application{
             Random random = new Random();
             hbUris.setStyle("-fx-background-color: " + colorList[random.nextInt(colorList.length)]);
      
-            if( true ) {
+            WebsiteState wss = stateMap.get(currentWebsite);
+            if( wss.isStarted ) {
               	Stage stage = new Stage();
             	Button addseednw = new Button("Add uri");
             		addseednw.setOnAction( e2 -> {
-            			WebsiteState wss = stateMap.get(currentWebsite);
+            			
             			wss.getSeedList().add(newUri.getText());
-            			System.out.println(wss.getSeedList());
+            			System.out.println("new uri added");
+            			stage.close();
             		});
             	VBox vbnw = new VBox(hbUris, addseednw);
             	vbnw.setAlignment(Pos.CENTER);
             	vbnw.setSpacing(20);
-                Scene scene = new Scene(vbnw, 400, 300);
+            	vbnw.setStyle("-fx-background-color: mediumslateblue;");
+                Scene scene = new Scene(vbnw, 300, 100);
                 stage.setScene(scene);
-                stage.setTitle("");
+                stage.setTitle("Add uri");
                 stage.show();
             }
             else
