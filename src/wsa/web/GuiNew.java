@@ -66,7 +66,15 @@ public class GuiNew extends Application{
 
 	private BorderPane borderPane = new BorderPane();
 	
-
+	public class DetailData {
+		public final SimpleStringProperty urlName;
+		public final SimpleBooleanProperty err;
+		
+		public DetailData (String url, boolean err) {
+			this.urlName = new SimpleStringProperty(url);
+			this.err = new SimpleBooleanProperty(err);			
+		}
+	}
 
 	/**Classe simulativa per i risultati crawlerResults */
 	public class LinkResult {
@@ -122,7 +130,7 @@ public class GuiNew extends Application{
 		private List<TextField> seedsList = new ArrayList<>();
 		private String id;
 		
-		private ObservableList<LinkResult> obsList;
+		private ObservableList<LinkResult> obsList = FXCollections.observableArrayList();
 
 		
 		
@@ -178,9 +186,7 @@ public class GuiNew extends Application{
 						while((cr=siteCrawler.get()).isPresent())
 						{
 							LinkResult lr = new LinkResult(cr.get());
-							ObservableList<LinkResult> oList = table.getItems();
-							oList.add(lr);
-							obsList = oList;
+							obsList.add(lr);				
 						}
 					}
 				}, 0, 1000);
@@ -242,9 +248,11 @@ public class GuiNew extends Application{
 		siteMap.put(websiteB, websiteNumber); 
 		
 		WebsiteState wss1 = new WebsiteState("Website " + websiteNumber);
+		stateMap.put(currentWebsite, wss1);
+		
 		wss1.setTable(createTableView());
 /*TEST*/		System.out.println("first state created");		
-		stateMap.put(currentWebsite, wss1);		
+				
 
 		//CENTER
 		//prima creazione center
@@ -368,7 +376,6 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 		dominioText.setStroke(Color.BLACK);
 		dominioText.setStrokeWidth(1);
 
-	
 		/**
 		dominio.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
 			stringTest += e.getText();
@@ -539,7 +546,7 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 						System.out.println(newUri.getText());
 						wss.seedsList.add(newUri);
 						//si blocca
-						//wss.siteCrawler.addSeed(new URI(newUri.getText()));						
+						wss.siteCrawler.addSeed(new URI(newUri.getText()));						
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
@@ -563,32 +570,18 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 	{
 		TableView<LinkResult> table = new TableView<LinkResult>();
 		table.setPrefWidth(Double.MAX_VALUE);
-
-		try
-		{
-			URI sito1 = new URI("sito1");
-			URI	sito2 = new URI("sito2");
-			URI	sito3 = new URI("sito3");
-			List<URI> testList = Arrays.asList(sito1,sito2,sito3);
-
-			//			Map<URI, Integer>
-			ObservableList<LinkResult> data = FXCollections.observableArrayList(
-					new LinkResult(new CrawlerResult(new URI("http://www.multiplayer.it"), false, testList, null, null))
-					,new LinkResult(new CrawlerResult(new URI("http://www.multiplayer.it/ps3"), false, null, null, null))
-					);
-
-			table.setItems(data);
-		}
-		catch (URISyntaxException e1)
-		{
+			
+		ObservableList<LinkResult> obs = stateMap.get(currentWebsite).getData();
+		
+		
+		try {
+			List<URI> links = new ArrayList(Arrays.asList(new URI("a"),new URI("b"),new URI("c")));
+			obs.add(new LinkResult(new CrawlerResult(new URI("http://www.google.it"), false, links, null, null)));
+		} catch (URISyntaxException e1) {
 			e1.printStackTrace();
 		}
 		
-		/**
-		ObservableList<LinkResult> data = FXCollections.observableArrayList();
-		if(stateMap.get(currentWebsite).siteCrawler.isRunning())
-			data = stateMap.get(currentWebsite).getData();
-			**/
+		table.setItems(obs);
 		
 		table.setEditable(true);
 
@@ -637,19 +630,52 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 								button.setOnAction( e -> {
 									System.out.println("detailed clicked!!! ");
 
+									
 									//table.getColumns().add(detailedCol);
 									Stage stage = new Stage();
 									LinkResult lr = (LinkResult)this.getTableRow().getItem();
 									
 									System.out.println("index = " + this.getIndex() + " - "+ this.getTableRow().getIndex() +  " - item:" + lr.urlName.getValue());
 
-									TableView<LinkResult> ntable = new TableView<LinkResult>();
-									ntable.setPrefWidth(Double.MAX_VALUE);
+									TableView<DetailData> detailTable = new TableView<DetailData>();
+									detailTable.setPrefWidth(Double.MAX_VALUE);
 									//TableColumn col =
-
-									Text text = new Text("Results");
+									
+									TableColumn<DetailData, String> urlNameCol = new TableColumn<DetailData, String>("URL");
+									urlNameCol.setMinWidth(100);
+									urlNameCol.setCellValueFactory( new Callback<TableColumn.CellDataFeatures<DetailData,String>, ObservableValue<String>>() {
+										@Override
+										public ObservableValue<String> call(
+												CellDataFeatures<DetailData, String> param) {
+											return param.getValue().urlName;
+										}
+									});
+									
+									TableColumn<DetailData, Boolean> statusCol = new TableColumn<DetailData, Boolean>("DOWNLOADED");
+									statusCol.setMinWidth(100);
+									statusCol.setCellValueFactory( new Callback<TableColumn.CellDataFeatures<DetailData,Boolean>, ObservableValue<Boolean>>() {
+										@Override
+										public ObservableValue<Boolean> call(
+												CellDataFeatures<DetailData, Boolean> param) {
+											return param.getValue().err;
+										}
+									});
+									
+									detailTable.getColumns().add(urlNameCol);
+									detailTable.getColumns().add(statusCol);
+									
+									ObservableList<DetailData> details = FXCollections.observableArrayList();
+									for( URI u : lr.uriList) {
+										//SiteCrawler sc = stateMap.get(currentWebsite).siteCrawler;
+										//System.out.println(sc.isRunning());
+										//Boolean err = sc.getLoaded().contains(u) && sc.getErrors().contains(u);
+										details.add( new DetailData(u.toString(), true) );
+									}
+									detailTable.setItems(details);
+									
+									Text text = new Text("Details table");
 									//ntable.getColumns().add(parallelDcol);
-									Scene scene = new Scene(new VBox(text, ntable), 200, 200);
+									Scene scene = new Scene(new VBox(text, detailTable), 200, 200);
 									stage.setScene(scene);
 									stage.show();
 
