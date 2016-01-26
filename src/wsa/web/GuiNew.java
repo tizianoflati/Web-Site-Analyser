@@ -16,31 +16,30 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import javafx.application.Application;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
-import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -50,6 +49,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.Callback;
 
 public class GuiNew extends Application{
@@ -222,6 +222,13 @@ public class GuiNew extends Application{
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("WSA");
 		primaryStage.show();
+		primaryStage.setOnCloseRequest( new EventHandler<WindowEvent>() {
+			
+			@Override
+			public void handle(WindowEvent event) {
+				//itera su statemap e chiudi i sitecrawler!!
+			}
+		});
 
 	}
 
@@ -450,12 +457,12 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 				Text text = new Text("Dati insufficienti!");
 				text.setTextAlignment(TextAlignment.CENTER);
 				
-				Button button = new Button("Ok");
-				button.setOnAction( e2 -> {
+				Button okButton = new Button("Ok");
+				okButton.setOnAction( eOkButton -> {
 					stage.close();
 				});
 
-				VBox vbPop = new VBox(text, button);
+				VBox vbPop = new VBox(text, okButton);
 				vbPop.setAlignment(Pos.CENTER);
 				vbPop.setSpacing(10);
 
@@ -464,8 +471,54 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 				stage.show();
 			}
 			else {
-				//aggiorna la VBox per levare il tasto "save"
-				VBox nvb = new VBox(addSeedB, goB);
+				//aggiorna la VBox per levare il tasto "save" ed aggiungere "stat"
+				
+				Button stat = new Button("Stat");
+				stat.setOnAction( eStat -> {
+					Stage stage = new Stage();
+					
+					  GridPane gridpane = new GridPane();
+					  
+					  
+
+					     // Set one constraint at a time...
+					     // Places the button at the first row and second column
+					     //Button button = new Button("sono un button");
+					     //GridPane.setRowIndex(button, 0);
+					     //GridPane.setColumnIndex(button, 1);
+
+					     Label visitedUri = new Label("Visited URI");
+					     //GridPane.setConstraints(visitedUri, 1, 1); // column=1 row=1
+					     
+					     Label innerURIs = new Label("Inner URIs");
+					     //GridPane.setConstraints(innerURIs, 1, 2); // column=1 row=2
+
+					     Label uriErrsNum = new Label("URI errs num");
+					     //GridPane.setConstraints(uriErrsNum, 1, 3); // column=1 row=3
+
+					     ObservableList<String> names = FXCollections.observableArrayList(
+					             "Visited URI", "Inner URIs", "URI errs num");
+					     
+					     
+					     
+					     
+					     ListView<String> listView = new ListView<String>(names);
+					     GridPane.setConstraints(listView, 1, 1);
+					     
+					     
+					     
+					     // don't forget to add children to gridpane
+					     gridpane.getChildren().addAll(listView);
+
+					Scene scene = new Scene(gridpane,600, 600);
+				     
+				     listView.autosize();
+					stage.setScene(scene);
+					stage.show();
+					
+				});
+				
+				VBox nvb = new VBox(addSeedB, goB, stat);
 				nvb.setPrefWidth(100);
 				nvb.setSpacing(20);
 				nvb.setAlignment(Pos.TOP_CENTER);
