@@ -46,10 +46,7 @@ public class CrawlerC implements Crawler {
 		
 		// If it is the first time we start the crawler
 		if(this.crawlerThread.getCrawlerState() == CrawlerState.RUNNABLE) crawlerThread.start();
-		else
-		{
-			this.crawlerThread.setCrawlerState(CrawlerState.RUNNING);
-		}
+		this.crawlerThread.setCrawlerState(CrawlerState.RUNNING);
 	}
 
 	@Override

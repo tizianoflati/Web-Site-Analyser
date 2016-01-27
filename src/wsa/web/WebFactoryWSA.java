@@ -89,12 +89,12 @@ public class WebFactoryWSA extends WebFactory{
     	// Se dom e dir sono entrambi non null, assume che sia un nuovo web site
     	// con dominio dom da archiviare nella directory dir.
     	if(dom != null && dir != null)
-    		return new SiteCrawlerC(getCrawler(new HashSet<URI>(), new HashSet<URI>(), new HashSet<URI>(), pageLink), dir);
+    		return new SiteCrawlerC(getCrawler(new HashSet<URI>(), new HashSet<URI>(), new HashSet<URI>(), pageLink), dom, dir);
     	
     	// Se dom non è null e dir è null, l'esplorazione del web site con dominio
         // dom sarà eseguita senza archiviazione.
     	if(dom != null && dir == null)
-    		return new SiteCrawlerC(getCrawler(new HashSet<URI>(), new HashSet<URI>(), new HashSet<URI>(), pageLink));
+    		return new SiteCrawlerC(getCrawler(new HashSet<URI>(), new HashSet<URI>(), new HashSet<URI>(), pageLink), dom);
     	
     	// TODO: Se dom è null e dir non è null, assume che l'esplorazione del web site
     	// sia già archiviata nella directory dir e la apre.
@@ -108,7 +108,7 @@ public class WebFactoryWSA extends WebFactory{
     		// Load from disk
     		WebSiteLoader.load(crawlerResultsList, loaded, toLoad, errs, dir.toFile(), dom);
     		
-    		return new SiteCrawlerC(getCrawler(loaded, toLoad, errs, pageLink), dir, crawlerResultsList);
+    		return new SiteCrawlerC(getCrawler(loaded, toLoad, errs, pageLink), dom, dir, crawlerResultsList);
     	}
     	
     	return null;

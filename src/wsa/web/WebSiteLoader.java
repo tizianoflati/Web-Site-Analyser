@@ -21,7 +21,6 @@ public class WebSiteLoader {
 	public static void load(List<CrawlerResult> crawlerResultsList, Set<URI> loaded, Set<URI> toLoad, Set<URI> errs, File dir, URI name) {
 		File file = new File(dir, name.toString() + ".wsa" );
 		BufferedReader bufferedReader;
-		Set<URI> seeds = new HashSet<>();
 
 		URI uriCrawler;
 		boolean linkPage;
@@ -33,10 +32,6 @@ public class WebSiteLoader {
 			bufferedReader = new BufferedReader( new FileReader(file));
 			String dom = bufferedReader.readLine();
 
-
-			int seedSize = Integer.parseInt(bufferedReader.readLine());
-			for(int i = 0; i < seedSize; i++)
-				seeds.add(new URI(bufferedReader.readLine()));					
 			int toLoadSize = Integer.parseInt(bufferedReader.readLine());
 			for(int i = 0; i < toLoadSize; i++)
 				toLoad.add(new URI(bufferedReader.readLine()));

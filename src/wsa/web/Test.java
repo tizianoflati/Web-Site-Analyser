@@ -24,22 +24,23 @@ public class Test{
 //			crawler.add(new URI(seed3));
 			
 			crawler.start();
+			crawler.suspend();
 			
 			System.out.println("SLEEPING FOR 5 SECONDS");
 			for(int i=0; i<60; i++)
 			{
-				Thread.sleep(10000);
-				if(System.currentTimeMillis()%2==0) crawler.start();
-				
+				Thread.sleep(1000);
+//				if(System.currentTimeMillis()%2==0)
+//					crawler.start();
+//				
+				System.out.println("TEST "+i+":");
 				System.out.println("NUMERO DI THREAD ATTIVI: " + Thread.activeCount());
-				System.out.println(crawler.isRunning());
+				System.out.println("CANCELLED? " + crawler.isCancelled());
+				System.out.println("IS RUNNING? " + crawler.isRunning());
 			}
 			System.out.println("FINISHED SLEEPING");
 			
-			crawler.cancel();
-			
-			System.out.println("CANCELLED? " + crawler.isCancelled());
-			System.out.println("IS RUNNING? " + crawler.isRunning());
+//			crawler.cancel();
 //		}
 //		catch (URISyntaxException e)
 //		{

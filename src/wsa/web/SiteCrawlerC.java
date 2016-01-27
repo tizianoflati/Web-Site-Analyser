@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SiteCrawlerC implements SiteCrawler{
 	
+	private URI dom;
 	private Crawler crawler;
 	private ScheduledThreadPoolExecutor saver;
 	private Runnable saverRunnable;
@@ -33,16 +34,23 @@ public class SiteCrawlerC implements SiteCrawler{
     	return false;
     }
 	
-    public SiteCrawlerC(Crawler crawler) {
-    	this(crawler, null, null);
+    public SiteCrawlerC(Crawler crawler, URI dom) {
+    	this(crawler, dom, null);
 	}
-    public SiteCrawlerC(Crawler crawler, Path dir) {
-    	this(crawler, dir, null);
+    public SiteCrawlerC(Crawler crawler, URI dom, Path dir) {
+    	this(crawler, dom, dir, null);
 	}
-	public SiteCrawlerC(Crawler crawler, Path dir, List<CrawlerResult> crawlerResultsList) {
+	public SiteCrawlerC(Crawler crawler, URI dom, Path dir, List<CrawlerResult> crawlerResultsList) {
 		this.crawler = crawler;
+		this.dom = dom;
 		
-		if(dir != null) this.saver = new ScheduledThreadPoolExecutor(1);
+		if(dir != null)
+		{
+			this.saver = new ScheduledThreadPoolExecutor(1);
+			this.saverRunnable = () -> {
+				WebSiteSaver.save(this, dir.toFile(), dom);
+			};
+		}
 		
 		if(crawlerResultsList != null) this.crawlerResultList  = crawlerResultsList;
 	}

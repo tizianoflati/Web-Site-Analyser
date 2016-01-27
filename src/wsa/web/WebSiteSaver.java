@@ -10,15 +10,12 @@ import java.util.List;
 import java.util.Set;
 
 public class WebSiteSaver {
-	public static void save(SiteCrawler siteCrawler, File selectedDir, URI dominio, List<URI> seeds){
+	public static void save(SiteCrawler siteCrawler, File selectedDir, URI dominio){
 		try {
 			BufferedWriter writer = new BufferedWriter( new FileWriter( new File(selectedDir, dominio.toString()+".txt") ) );
 			
 			String newLine = System.lineSeparator();
 			writer.write(dominio.toString() + newLine);
-			writer.write(seeds.size() + newLine);
-			for( URI u : seeds)
-				writer.write(u + newLine);
 			writer.write(siteCrawler.getToLoad().size() + newLine);
 			for(URI u : siteCrawler.getToLoad())
 				writer.write(u + newLine);
