@@ -48,7 +48,7 @@ public class CrawlerThread extends Thread {
 
 		this.loader = loader;
 
-		if(loaded != null) loaded.addAll(loaded);
+		if(loaded != null) this.loaded.addAll(loaded);
 		if(toLoad != null) for(URI uri : toLoad) add(uri);
 		if(errs != null) this.errors.addAll(errs);
 		if(pageLink != null) this.predicate = pageLink;
@@ -130,11 +130,11 @@ public class CrawlerThread extends Thread {
 
 		while(true)
 		{
-			try
-			{
+//			try
+//			{
 				if(getCrawlerState() == CrawlerState.CANCELLED) break;
 
-				if(toLoad.isEmpty() || getCrawlerState() == CrawlerState.SUSPENDED)
+				if(getToLoad().isEmpty() || getCrawlerState() == CrawlerState.SUSPENDED)
 				{
 					System.out.println("QUEUE IS EMPTY. FORCING SUSPENDED STATE.");
 					synchronized (lock) {
@@ -148,35 +148,42 @@ public class CrawlerThread extends Thread {
 					}
 				}
 
-				if(toLoad.isEmpty()) continue;
+				if(getToLoad().isEmpty()) continue;
 
-				System.out.println("|QUEUE| = " + toLoad.size());
-				System.out.println("EXTRACTING NEXT URI...");
-				URI uri = toLoad.iterator().next();
-				System.out.println("|QUEUE| = " + toLoad.size());
+				// System.out.println("|QUEUE| = " + toLoad.size());
+				// System.out.println("EXTRACTING NEXT URI...");
+				URI uri = next();
+				// System.out.println("|QUEUE| = " + toLoad.size());
 
-				if(!uri.isAbsolute())
-				{
-					toLoad.remove(uri);
-					continue;
-				}
+				if(!uri.isAbsolute()) continue;
 
 				System.out.println("DOWNLOADING:" + uri);
 
-				Future<LoadResult> future = loader.submit(uri.toURL());
 				resultThreadsExecutor.submit(() ->{
 					try{
+						Future<LoadResult> future = loader.submit(uri.toURL());
 						LoadResult loadResult = future.get();
 						
-						System.out.println("RISULTATO: " + (loadResult.exc == null ? "OK" : "FAILED"));
-						System.out.println("# IMMAGINI: " + loadResult.parsed.getByTag("img").size());
-						for(Parsed.Node img : loadResult.parsed.getByTag("img")) System.out.println("\t" + img.attr.get("src"));
-	
-						if(loadResult.exc != null) errors.add(uri);
-						else loaded.add(uri);
+						System.out.println("RISULTATO PER "+loadResult.url+" : " + (loadResult.exc == null ? "OK" : "FAILED: " + loadResult.exc.toString()));
+						if(loadResult.parsed != null)
+						{
+							System.out.println("# IMMAGINI: " + loadResult.parsed.getByTag("img").size());
+							// for(Parsed.Node img : loadResult.parsed.getByTag("img")) System.out.println("\t" + img.attr.get("src"));
+						}
+
+						if(loadResult.exc != null)
+						{
+//							System.out.println("ADDING AN ERROR " + uri + "("+loadResult.exc+")");
+//							System.out.println("|ERRORS("+uri+")| = " + getErrors().size());
+							getErrors().add(uri);
+//							System.out.println("|ERRORS("+uri+")++| = " + getErrors().size());
+						}
+						else
+						{
+//							System.out.println("ADDING A SUCCESS " + uri + "("+loadResult.exc+")");
+							getLoaded().add(uri);
+						}
 						
-						toLoad.remove(uri);
-	
 						boolean linkPage = false;
 						List<URI> links = null;
 						List<String> linksErrors = null;
@@ -186,12 +193,14 @@ public class CrawlerThread extends Thread {
 							links = new ArrayList<>();
 							for(String link : loadResult.parsed.getLinks())
 							{
-								System.out.println("ADDING NEW LINK TO CRAWLER RESULT: " + link);
+								// System.out.println("ADDING NEW LINK TO CRAWLER RESULT: " + link);
 	
 								try
 								{
 									URI uriLink = new URI(link);
-									add(uriLink);
+									
+									// ADD THE NEW LINK TO THE QUEUE
+									this.add(uriLink);
 	
 									links.add(uriLink);
 								}
@@ -203,43 +212,49 @@ public class CrawlerThread extends Thread {
 							}
 						}
 	
-						results.add(new CrawlerResult(uri, linkPage, links, linksErrors, loadResult.exc));
+						getResults().add(new CrawlerResult(uri, linkPage, links, linksErrors, loadResult.exc));
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} catch (ExecutionException e) {
 					e.printStackTrace();
 				}
+				catch (MalformedURLException e)
+				{
+					getResults().add(new CrawlerResult(null, false, null, null, e));
+				}
 				});
-			}
-			catch (MalformedURLException e)
-			{
-				results.add(new CrawlerResult(null, false, null, null, e));
-			}
+//			}
 		}
 	}
 
-	public void add(URI uriLink) {
+	synchronized private URI next() {
+		URI uri = getToLoad().iterator().next();
+		getToLoad().remove(uri);
+		return uri;
+	}
+	synchronized public void add(URI uriLink) {
 
-		if(this.errors.contains(uriLink)) return;
-		if(this.loaded.contains(uriLink)) return;
+		if(getErrors().contains(uriLink)) return;
+		if(getLoaded().contains(uriLink)) return;
 
-		this.toLoad.add(uriLink);
-		synchronized (toLoad) {toLoad.notify();}
+		getToLoad().add(uriLink);
+		
+		synchronized (lock) {lock.notify();}
 	}
 
-	public Set<URI> getLoaded() {
+	public synchronized Set<URI> getLoaded() {
 		return loaded;
 	}
 
-	public Set<URI> getToLoad() {
+	public synchronized Set<URI> getToLoad() {
 		return toLoad;
 	}
 
-	public Set<URI> getErrors() {
+	public synchronized Set<URI> getErrors() {
 		return errors;
 	}
 
-	public List<CrawlerResult> getResults() {
+	public synchronized List<CrawlerResult> getResults() {
 		return results;
 	}
 }

@@ -84,7 +84,7 @@ public class WebFactoryWSA extends WebFactory{
 			}
 		}).length == 0) throw new IllegalArgumentException();
     	
-    	Predicate<URI> pageLink = (u) -> {return SiteCrawler.checkSeed(dom, u);};
+    	Predicate<URI> pageLink = (u) -> {return SiteCrawlerC.checkSeed(dom, u);};
     	
     	// Se dom e dir sono entrambi non null, assume che sia un nuovo web site
     	// con dominio dom da archiviare nella directory dir.
@@ -96,7 +96,7 @@ public class WebFactoryWSA extends WebFactory{
     	if(dom != null && dir == null)
     		return new SiteCrawlerC(getCrawler(new HashSet<URI>(), new HashSet<URI>(), new HashSet<URI>(), pageLink), dom);
     	
-    	// TODO: Se dom è null e dir non è null, assume che l'esplorazione del web site
+    	// Se dom è null e dir non è null, assume che l'esplorazione del web site
     	// sia già archiviata nella directory dir e la apre.
     	if(dom == null && dir != null)
     	{

@@ -22,7 +22,7 @@ public class DataStatistics {
 		int n = 0;
 		
 		for( URI u : siteCrawler.getLoaded() ) {
-			if(SiteCrawler.checkSeed(dom, u)) n++;
+			if(SiteCrawlerC.checkSeed(dom, u)) n++;
 		}
 		
 		return n;

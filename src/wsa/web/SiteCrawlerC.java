@@ -65,7 +65,11 @@ public class SiteCrawlerC implements SiteCrawler{
 		if(isRunning()) return;
 		
 		crawler.start();
-		if(saver != null) saver.scheduleAtFixedRate(saverRunnable, 0, 1, TimeUnit.MINUTES);
+		if(saver != null)
+		{
+			System.out.println("SCHEDULING SAVER");
+			saver.scheduleAtFixedRate(saverRunnable, 0, 1, TimeUnit.MINUTES);
+		}
 	}
 
 	@Override

@@ -19,7 +19,9 @@ public class LoaderC implements Loader {
 	public LoadResult load(URL url) {
 
 		try {
-			Thread.sleep(1000 * (1+rand.nextInt(5)));
+			long random = 10000 * (1+rand.nextInt(5));
+			System.out.println("WAITING " + random/1000 + "s BEFORE DOWNLOADING");
+			Thread.sleep(random);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
@@ -43,14 +45,15 @@ public class LoaderC implements Loader {
 			document.putProperty("IgnoreCharsetDirective", new Boolean(true));
 			kit.read(connection.getInputStream(), document, 0);
 			
-			System.out.println("Pagina scaricata correttamente: " + url);
+			System.out.println("Raw-data correctly downloaded: " + url);
 			
 			// Parse it
 			parsed = new ParsedC(document);
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			new IOException(e.getMessage() + " for url: " + url).printStackTrace();
+//			e.printStackTrace();
 			exception = e;
 		}
 		catch (BadLocationException e)
@@ -71,11 +74,7 @@ public class LoaderC implements Loader {
 			}
 		}
 		
-		try {
-			Thread.sleep(3000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		if(exception != null) System.out.println("RETURNING FAILURE: " + url);
 		
 		return new LoadResult(url, parsed, exception);
 	}

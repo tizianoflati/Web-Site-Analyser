@@ -11,8 +11,10 @@ import java.util.Set;
 
 public class WebSiteSaver {
 	public static void save(SiteCrawler siteCrawler, File selectedDir, URI dominio){
+		System.out.println("SAVING " + dominio + " ON DISK: " + selectedDir);
+		
 		try {
-			BufferedWriter writer = new BufferedWriter( new FileWriter( new File(selectedDir, dominio.toString()+".txt") ) );
+			BufferedWriter writer = new BufferedWriter( new FileWriter( new File(selectedDir, dominio.getHost().toString()+".txt") ) );
 			
 			String newLine = System.lineSeparator();
 			writer.write(dominio.toString() + newLine);
