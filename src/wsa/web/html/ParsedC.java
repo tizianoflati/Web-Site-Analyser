@@ -13,6 +13,9 @@ import javax.swing.text.Document;
 import javax.swing.text.Element;
 import javax.swing.text.html.HTML;
 
+/**
+ * Impementazione dell'interfaccia Parsed
+ */
 public class ParsedC implements Parsed{
 	private Tree tree;
 	private Map<String, List<Node>> map = new HashMap<>();
@@ -29,6 +32,11 @@ public class ParsedC implements Parsed{
 		});
 	}
 	
+	/**
+	 * Converte gli elementi estratti nel formato Tree implementato
+	 * @param il nodo esaminato
+	 * @return l'albero Tree
+	 */
 	private static Tree translate ( Element element ) {
 		Parsed.Node treeRoot = extractNode(element);
 		if(treeRoot == null) return null;
@@ -44,7 +52,11 @@ public class ParsedC implements Parsed{
 		
 		 return tree;
 	}
-	
+	/**
+	 * Estrae informazioni da un nodo, ricava la mappa degli attributi, tag e content
+	 * @param un nodo da esaminare
+	 * @return un nuovo nodo con le informazioni estratte
+	 */
 	private static Node extractNode(Element element) {
 		if(element.getName().equals(HTML.Tag.COMMENT.toString())) return null;
 		if(element.getName().equals(HTML.Tag.IMPLIED.toString())) return null;
@@ -124,6 +136,9 @@ public class ParsedC implements Parsed{
 	}
 
 	@Override
+	/**
+	 * 
+	 */
 	public List<String> getLinks() {
 		if( !map.containsKey("a")) 
 			return new ArrayList<String>();

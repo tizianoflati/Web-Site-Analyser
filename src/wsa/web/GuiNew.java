@@ -68,11 +68,11 @@ public class GuiNew extends Application{
 	
 	public class DetailData {
 		public final SimpleStringProperty urlName;
-		public final SimpleBooleanProperty err;
+		public final SimpleStringProperty status;
 		
-		public DetailData (String url, boolean err) {
+		public DetailData (String url, String status) {
 			this.urlName = new SimpleStringProperty(url);
-			this.err = new SimpleBooleanProperty(err);			
+			this.status = new SimpleStringProperty(status);			
 		}
 	}
 
@@ -183,7 +183,7 @@ public class GuiNew extends Application{
 					public void run() {
 
 						Optional<CrawlerResult> cr = null;
-						while((cr=siteCrawler.get()).isPresent())
+						while((cr=siteCrawler.get()).isPresent() && cr.get().uri != null)
 						{
 							LinkResult lr = new LinkResult(cr.get());
 							obsList.add(lr);				
@@ -196,7 +196,7 @@ public class GuiNew extends Application{
 				e.printStackTrace();
 			}
 		}
-
+		
 		public VBox getRightVBox() { return rightVb; }
 
 		public VBox getCenterVBox() { return centerVb; }
@@ -256,9 +256,11 @@ public class GuiNew extends Application{
 		
 		WebsiteState wss1 = new WebsiteState("Website " + websiteNumber);
 		stateMap.put(currentWebsite, wss1);
+System.out.println("State created: website " + websiteNumber);
+System.out.println("stateMap size: " + stateMap.size());
 		
 		wss1.setTable(createTableView());
-/*TEST*/		System.out.println("first state created");		
+System.out.println("first state created");		
 				
 
 		//CENTER
@@ -268,8 +270,6 @@ public class GuiNew extends Application{
 		spCenter.setFitToWidth(true);  // Per far sì che il contenitore spCenter
 		spCenter.setFitToHeight(true); // occupi tutto lo spazio disponibile 
 		//END CENTER
-		
-/*TEST*/System.out.println(stateMap);
 		
 		//Salva lo stato grafico iniziale
 		wss1.setCenterVBox(createCenter());
@@ -308,10 +308,10 @@ public class GuiNew extends Application{
 			currentWebsite = websiteNumber;
 			System.out.println("websiteNumber: " + websiteNumber);
 			WebsiteState nwss = new WebsiteState("Website " + websiteNumber);
-			nwss.setTable(createTableView());
-			System.out.println("WebsiteState " + currentWebsite + " created");
 			stateMap.put(websiteNumber, nwss);
-/*TEST*/		System.out.println("new state created");			
+			nwss.setTable(createTableView());
+System.out.println("WebsiteState " + currentWebsite + " created");			
+System.out.println("new state created");			
 			VBox ncurrentCenter = createCenter();
 			VBox currentRight = createRightUi(ncurrentCenter);
 			borderPane.setCenter(ncurrentCenter);
@@ -396,9 +396,7 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 			
 		});
 		**/
-		
-		System.out.println(stateMap);
-		
+
 		stateMap.get(currentWebsite).setTextFieldDom(dominio);
 		
 		dominio.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
@@ -541,6 +539,14 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 				//START
 				wss.start(wss.getPath());
 
+				
+try {
+		wss.siteCrawler.addSeed(new URI("http://multiplayer.it/playstation-vita/"));
+	} catch (Exception e1) {
+		// TODO Auto-generated catch block
+		e1.printStackTrace();
+	}
+
 				//aggiorna il borderPane con i dati nuovi
 				borderPane.setRight(nvb);
 				System.out.println(currentWebsite);
@@ -624,15 +630,17 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 		TableView<LinkResult> table = new TableView<LinkResult>();
 		table.setPrefWidth(Double.MAX_VALUE);
 			
+System.out.println(stateMap.get(currentWebsite));
 		ObservableList<LinkResult> obs = stateMap.get(currentWebsite).getData();
-		
-		
+	
+		/**
 		try {
 			List<URI> links = new ArrayList(Arrays.asList(new URI("a"),new URI("b"),new URI("c")));
 			obs.add(new LinkResult(new CrawlerResult(new URI("http://www.google.it"), false, links, null, null)));
 		} catch (URISyntaxException e1) {
 			e1.printStackTrace();
 		}
+		**/
 		
 		table.setItems(obs);
 		
@@ -704,13 +712,13 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 										}
 									});
 									
-									TableColumn<DetailData, Boolean> statusCol = new TableColumn<DetailData, Boolean>("DOWNLOADED");
+									TableColumn<DetailData, String> statusCol = new TableColumn<DetailData, String>("DOWNLOADED");
 									statusCol.setMinWidth(100);
-									statusCol.setCellValueFactory( new Callback<TableColumn.CellDataFeatures<DetailData,Boolean>, ObservableValue<Boolean>>() {
+									statusCol.setCellValueFactory( new Callback<TableColumn.CellDataFeatures<DetailData, String>, ObservableValue<String>>() {
 										@Override
-										public ObservableValue<Boolean> call(
-												CellDataFeatures<DetailData, Boolean> param) {
-											return param.getValue().err;
+										public ObservableValue<String> call(
+												CellDataFeatures<DetailData, String> param) {
+											return param.getValue().status;
 										}
 									});
 									
@@ -719,10 +727,15 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 									
 									ObservableList<DetailData> details = FXCollections.observableArrayList();
 									for( URI u : lr.uriList) {
-										//SiteCrawler sc = stateMap.get(currentWebsite).siteCrawler;
+										SiteCrawler sc = stateMap.get(currentWebsite).siteCrawler;
 										//System.out.println(sc.isRunning());
-										//Boolean err = sc.getLoaded().contains(u) && sc.getErrors().contains(u);
-										details.add( new DetailData(u.toString(), true) );
+										Boolean loaded = sc.getLoaded().contains(u);
+										Boolean err = sc.getErrors().contains(u);
+										String risult = "";
+										if( !loaded ) risult = "not loaded";
+										else if( loaded && !err) risult = "downloaded";
+										else risult = "error";
+										details.add( new DetailData(u.toString(), risult) );
 									}
 									detailTable.setItems(details);
 									
