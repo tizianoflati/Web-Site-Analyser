@@ -154,6 +154,10 @@ public class GuiNew extends Application{
 			this.group = new Group(vbox);
 			this.table = table;
 		}
+		
+		public void setSiteCrawler(SiteCrawler siteCrawler) {
+			this.siteCrawler = siteCrawler;
+		}
 
 		public void setRightVBox(VBox rightVb) {
 			this.rightVb = rightVb;
@@ -171,10 +175,8 @@ public class GuiNew extends Application{
 			this.dominioText = dominio;
 		}
 
-		public void start(Path dir){
+		public void start(){
 
-			try {
-				this.siteCrawler = WebFactoryWSA.getSiteCrawler(new URI(dominioText.getText()), dir);
 				siteCrawler.start();
 				Timer timer = new Timer();
 
@@ -190,11 +192,7 @@ public class GuiNew extends Application{
 						}
 					}
 				}, 0, 1000);
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (URISyntaxException e) {
-				e.printStackTrace();
-			}
+			
 		}
 		
 		public VBox getRightVBox() { return rightVb; }
@@ -259,7 +257,7 @@ public class GuiNew extends Application{
 System.out.println("State created: website " + websiteNumber);
 System.out.println("stateMap size: " + stateMap.size());
 		
-		wss1.setTable(createTableView());
+		
 System.out.println("first state created");		
 				
 
@@ -272,7 +270,7 @@ System.out.println("first state created");
 		//END CENTER
 		
 		//Salva lo stato grafico iniziale
-		wss1.setCenterVBox(createCenter());
+		wss1.setCenterVBox(currentCenter);
 		wss1.setRightVBox(createRightUi(currentCenter));
 
 		VBox vbLeft = new VBox(addSiteB, websiteB);
@@ -399,10 +397,13 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 
 		stateMap.get(currentWebsite).setTextFieldDom(dominio);
 		
+		
+		
+		/**
 		dominio.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
 			stateMap.get(currentWebsite).setTextFieldDom(dominio);
 			});
-		
+		*/
 		// Campo primo uri
 		Text uriText = new Text("URI ->");
 		TextField uri = new TextField();
@@ -469,6 +470,32 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 				stage.show();
 			}
 			else {
+				//START
+				WebsiteState wss = stateMap.get(currentWebsite);
+				SiteCrawler siteCrawler = null;
+				try
+				{
+					URI uri = new URI(wss.dominioText.getText());
+					siteCrawler = WebFactoryWSA.getSiteCrawler(uri, wss.getPath());
+					wss.setSiteCrawler(siteCrawler);
+					for(TextField tf : wss.seedsList) {
+						siteCrawler.addSeed(new URI(tf.getText()));
+					}
+				}
+				catch(URISyntaxException e1)
+				{
+					//creare popup
+				}
+				catch(IOException e2)
+				{
+					//creare popup
+				}
+				catch(IllegalArgumentException e3)
+				{
+					System.out.println("Dominio non corretto");
+					return;
+				}
+				
 				//aggiorna la VBox per levare il tasto "save" ed aggiungere "stat"
 				
 				Button stat = new Button("Stat");
@@ -529,24 +556,24 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 					goB.setText("PAUSE");
 				}
 				//carica lo stato associato al webSite e...
-				WebsiteState wss = stateMap.get(currentWebsite);
+				
+				wss.setTable(createTableView());
 System.out.println("WebsiteState " + currentWebsite + " loaded");
 				//..setta la nuova parte destra di GUI
 				wss.setRightVBox(nvb);
 				//setta gli uri forniti
 				wss.showInfo();
-
-				//START
-				wss.start(wss.getPath());
-
 				
+				wss.start();
+
+/**				
 try {
 		wss.siteCrawler.addSeed(new URI("http://multiplayer.it/playstation-vita/"));
 	} catch (Exception e1) {
 		// TODO Auto-generated catch block
 		e1.printStackTrace();
 	}
-
+**/
 				//aggiorna il borderPane con i dati nuovi
 				borderPane.setRight(nvb);
 				System.out.println(currentWebsite);
