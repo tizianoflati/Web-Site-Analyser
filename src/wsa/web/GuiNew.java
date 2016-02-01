@@ -76,7 +76,7 @@ public class GuiNew extends Application{
 		}
 	}
 
-	/**Classe simulativa per i risultati crawlerResults */
+	/**Classe per i risultati crawlerResults */
 	public class LinkResult {
 		private final SimpleStringProperty urlName;
 		private final SimpleBooleanProperty linkPage;
@@ -98,6 +98,10 @@ public class GuiNew extends Application{
 				slinks = slinks + u.toString() + "\n";
 			this.links = new SimpleStringProperty(slinks);
 			return links;
+		}
+		
+		public SimpleBooleanProperty getLinkPage(){
+			return linkPage;
 		}
 
 		public SimpleStringProperty getUrlName() {
@@ -134,15 +138,18 @@ public class GuiNew extends Application{
 
 		
 		
-		/**
+		/**Costruisce un oggetto WebsiteState
 		 * 
-		 * @param table la tabella relativo al webSite
-		 * @param vb la parte destra della GUI
+		 * @param id il nome identificativo per lo stato
 		 */
 		public WebsiteState(String id) {
 			this.id = id;
 		}
 		
+		/**
+		 * Setta una tabella per lo stato corrente
+		 * @param table la tabella da settare
+		 */
 		public void setTable(TableView<LinkResult> table){
 			Label label = new Label(id);
 			label.setFont(new Font("Arial", 20));
@@ -155,26 +162,49 @@ public class GuiNew extends Application{
 			this.table = table;
 		}
 		
+		/**
+		 * Setta il siteCrawler
+		 * @param siteCrawler il siteCrawler da settare
+		 */
 		public void setSiteCrawler(SiteCrawler siteCrawler) {
 			this.siteCrawler = siteCrawler;
 		}
 
+		/**
+		 * Setta a parte destra della GUI
+		 * @param rightVb la VBox corrispondente alla parte destra della GUI
+		 */
 		public void setRightVBox(VBox rightVb) {
 			this.rightVb = rightVb;
 		}
 		
+		/**
+		 * Setta la parte centrale della GUI
+		 * @param centerVb il VBox della parte centrale della GUI
+		 */
 		public void setCenterVBox(VBox centerVb) {
 			this.centerVb = centerVb;
 		}
 
+		/**
+		 * Setta il path
+		 * @param path il path da settare
+		 */
 		public void setPath(Path path){
 			this.path = path;
 		}
 		
+		/**
+		 * Setta il textField corrispondente al dominio
+		 * @param dominio il textField corrispondente al dominio da settare
+		 */
 		public void setTextFieldDom(TextField dominio){
 			this.dominioText = dominio;
 		}
 
+		/**
+		 * Fa partire l'esplorazione
+		 */
 		public void start(){
 
 				siteCrawler.start();
@@ -195,26 +225,48 @@ public class GuiNew extends Application{
 			
 		}
 		
+		/**
+		 * Ritorna la parte destra della GUI
+		 * @return la parte destra della GUI
+		 */
 		public VBox getRightVBox() { return rightVb; }
 
+		/**
+		 * Getter della parte centrale della GUI
+		 * @return la parte centrale della GUI
+		 */
 		public VBox getCenterVBox() { return centerVb; }
 
+		/**
+		 * Ritorna il Group per la Table della GUI
+		 * @return il Group per la Table della GUI
+		 */
 		public Parent getGroup() { return group; }
 		
+		/**
+		 * Ritorna il path
+		 * @return il path
+		 */
 		public Path getPath() { return path; }
 
+		/**
+		 * Ritorna i dati della tabella 
+		 *@return i dati della tabella
+		 */
+		public ObservableList<LinkResult> getData() {
+			return obsList;
+		}
+		
 		//per test
 		public void showInfo() {
 			System.out.println("SeedList: " + seedsList);
 			System.out.println("Path: " + path);
 		}
 
-		public ObservableList<LinkResult> getData() {
-			return obsList;
-		}
 
 	}
 
+	
 	public void start(Stage primaryStage) {
 		Scene scene = new Scene(createUI(), 800, 600);
 		primaryStage.setScene(scene);
@@ -224,12 +276,18 @@ public class GuiNew extends Application{
 			
 			@Override
 			public void handle(WindowEvent event) {
+					for( Map.Entry<Integer, WebsiteState> entry : stateMap.entrySet() ) {
+						entry.getValue().siteCrawler.cancel();
+					}
 				//itera su statemap e chiudi i sitecrawler!!
 			}
 		});
-
 	}
 
+	/**
+	 * Metodo principale per la creazione della GUI
+	 * @return un Parent rappresentante la GUI
+	 */
 	private Parent createUI() {
 
 		// TOP
@@ -248,7 +306,6 @@ public class GuiNew extends Application{
 		
 		//bottone di aggiunta website
 		Button addSiteB = new Button("Add website");
-		
 		Button websiteB = new Button("Website " + websiteNumber);
 		siteMap.put(websiteB, websiteNumber); 
 		
@@ -322,11 +379,11 @@ System.out.println("new state created");
 			newWebsiteB.setOnAction( f -> {
 
 				currentWebsite = siteMap.get(newWebsiteB);
-				System.out.println("current website number selected: " + currentWebsite);
+System.out.println("current website number selected: " + currentWebsite);
 				WebsiteState wss = stateMap.get(currentWebsite);
 System.out.println("WebsiteState " + currentWebsite + " loaded");
 				
-/*TEST*/		System.out.println("WebSite  " + currentWebsite + ":");
+System.out.println("WebSite  " + currentWebsite + ":");
 				wss.showInfo();
 
 				if( wss.siteCrawler != null ){
@@ -344,7 +401,7 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 		
 		websiteB.setOnAction( e -> {
 			currentWebsite = siteMap.get(websiteB);
-			System.out.println("current website number selected: " + currentWebsite);
+System.out.println("current website number selected: " + currentWebsite);
 			WebsiteState wss = stateMap.get(currentWebsite);
 System.out.println("WebsiteState " + currentWebsite + " loaded");
 
@@ -381,29 +438,14 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 		dominioText.setStroke(Color.BLACK);
 		dominioText.setStrokeWidth(1);
 
-		/**
-		dominio.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
-			stringTest += e.getText();
-			System.out.println(stringTest);
-			System.out.println(e);
-			System.out.println(e.getCode());
-			});
-		//----- da vedere
-		dominio.setOnKeyPressed( e -> {
-			System.out.println("key pressed!:" + dominio.getText());
-			
-		});
-		**/
-
 		stateMap.get(currentWebsite).setTextFieldDom(dominio);
-		
-		
 		
 		/**
 		dominio.addEventFilter(KeyEvent.KEY_PRESSED, e -> {
 			stateMap.get(currentWebsite).setTextFieldDom(dominio);
 			});
 		*/
+		
 		// Campo primo uri
 		Text uriText = new Text("URI ->");
 		TextField uri = new TextField();
@@ -445,29 +487,12 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 
 		goB.setOnAction( (e) -> {
 			
-			//uris.add("http://www.multiplayer.it");
-			//uris.add("http://www.multiplayer.it/ps3");
-			
-			System.out.println("dom = " + stateMap.get(currentWebsite).dominioText.getText());
+System.out.println("dom = " + stateMap.get(currentWebsite).dominioText.getText());
 
 			if( stateMap.get(currentWebsite).dominioText.getText().isEmpty() || stateMap.get(currentWebsite).seedsList.isEmpty() ) {
-				Stage stage = new Stage();
-
-				Text text = new Text("Dati insufficienti!");
-				text.setTextAlignment(TextAlignment.CENTER);
 				
-				Button okButton = new Button("Ok");
-				okButton.setOnAction( eOkButton -> {
-					stage.close();
-				});
-
-				VBox vbPop = new VBox(text, okButton);
-				vbPop.setAlignment(Pos.CENTER);
-				vbPop.setSpacing(10);
-
-				Scene scene = new Scene(vbPop, 70, 70);
-				stage.setScene(scene);
-				stage.show();
+				createPopup("Dati insufficienti!");
+				
 			}
 			else {
 				//START
@@ -484,15 +509,15 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 				}
 				catch(URISyntaxException e1)
 				{
-					//creare popup
+					createPopup("errore URI");
 				}
 				catch(IOException e2)
 				{
-					//creare popup
+					createPopup("errore IO");
 				}
 				catch(IllegalArgumentException e3)
 				{
-					System.out.println("Dominio non corretto");
+					createPopup("Dominio non corretto");
 					return;
 				}
 				
@@ -502,44 +527,20 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 				stat.setOnAction( eStat -> {
 					Stage stage = new Stage();
 					
-					  GridPane gridpane = new GridPane();
-					  
-					  
-
-					     // Set one constraint at a time...
-					     // Places the button at the first row and second column
-					     //Button button = new Button("sono un button");
-					     //GridPane.setRowIndex(button, 0);
-					     //GridPane.setColumnIndex(button, 1);
-
-					     Label visitedUri = new Label("Visited URI");
-					     //GridPane.setConstraints(visitedUri, 1, 1); // column=1 row=1
-					     
-					     Label innerURIs = new Label("Inner URIs");
-					     //GridPane.setConstraints(innerURIs, 1, 2); // column=1 row=2
-
-					     Label uriErrsNum = new Label("URI errs num");
-					     //GridPane.setConstraints(uriErrsNum, 1, 3); // column=1 row=3
-
-					     ObservableList<String> names = FXCollections.observableArrayList(
+				GridPane gridpane = new GridPane();
+				ObservableList<String> names = FXCollections.observableArrayList(
 					             "Visited URI", "Inner URIs", "URI errs num");
 					     
+				ListView<String> listView = new ListView<String>(names);
+				GridPane.setConstraints(listView, 1, 1);
 					     
-					     
-					     
-					     ListView<String> listView = new ListView<String>(names);
-					     GridPane.setConstraints(listView, 1, 1);
-					     
-					     
-					     
-					     // don't forget to add children to gridpane
-					     gridpane.getChildren().addAll(listView);
-
-					Scene scene = new Scene(gridpane,600, 600);
-				     
-				     listView.autosize();
-					stage.setScene(scene);
-					stage.show();
+				// don't forget to add children to gridpane
+				gridpane.getChildren().addAll(listView);
+				   
+				Scene scene = new Scene(gridpane,600, 600);
+				listView.autosize();
+				stage.setScene(scene);
+				stage.show();
 					
 				});
 				
@@ -566,14 +567,6 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 				
 				wss.start();
 
-/**				
-try {
-		wss.siteCrawler.addSeed(new URI("http://multiplayer.it/playstation-vita/"));
-	} catch (Exception e1) {
-		// TODO Auto-generated catch block
-		e1.printStackTrace();
-	}
-**/
 				//aggiorna il borderPane con i dati nuovi
 				borderPane.setRight(nvb);
 				System.out.println(currentWebsite);
@@ -591,7 +584,7 @@ try {
 		saveB.setOnAction( (e) -> {
 			final File selectedDirectory = directoryChooser.showDialog(new Stage());
 			if (selectedDirectory != null) {
-				System.out.println(selectedDirectory.getAbsolutePath()); //Test
+System.out.println(selectedDirectory.getAbsolutePath()); //Test
 				stateMap.get(currentWebsite).setPath(selectedDirectory.toPath());
 			}
 		});
@@ -615,7 +608,7 @@ try {
 			hbUris.setStyle("-fx-background-color: " + colorList[random.nextInt(colorList.length)]);
 
 			WebsiteState wss = stateMap.get(currentWebsite);
-			System.out.println("WebsiteState " + currentWebsite + " loaded");
+System.out.println("WebsiteState " + currentWebsite + " loaded");
 			if( wss.siteCrawler != null ) {
 				Stage stage = new Stage();
 				Button addseednw = new Button("Add uri");
@@ -629,7 +622,7 @@ try {
 				stage.show();
 				addseednw.setOnAction( e2 -> {
 					try {
-						System.out.println(newUri.getText());
+System.out.println(newUri.getText());
 						wss.seedsList.add(newUri);
 						//si blocca
 						wss.siteCrawler.addSeed(new URI(newUri.getText()));						
@@ -650,6 +643,30 @@ try {
 		});
 
 		return vb;
+	}
+
+	/** Crea una finestra di popup per segnalare avvisi
+	 * 
+	 * @param string il messaggio di avviso da visualizzare
+	 */
+	private void createPopup(String string) {
+		Stage stage = new Stage();
+
+		Text text = new Text(string);
+		text.setTextAlignment(TextAlignment.CENTER);
+		
+		Button okButton = new Button("Ok");
+		okButton.setOnAction( eOkButton -> {
+			stage.close();
+		});
+
+		VBox vbPop = new VBox(text, okButton);
+		vbPop.setAlignment(Pos.CENTER);
+		vbPop.setSpacing(10);
+
+		Scene scene = new Scene(vbPop, 70, 70);
+		stage.setScene(scene);
+		stage.show();		
 	}
 
 	private TableView<LinkResult> createTableView()
@@ -716,14 +733,14 @@ System.out.println(stateMap.get(currentWebsite));
 
 							{              				
 								button.setOnAction( e -> {
-									System.out.println("detailed clicked!!! ");
+System.out.println("detailed clicked!!! ");
 
 									
 									//table.getColumns().add(detailedCol);
 									Stage stage = new Stage();
 									LinkResult lr = (LinkResult)this.getTableRow().getItem();
 									
-									System.out.println("index = " + this.getIndex() + " - "+ this.getTableRow().getIndex() +  " - item:" + lr.urlName.getValue());
+System.out.println("index = " + this.getIndex() + " - "+ this.getTableRow().getIndex() +  " - item:" + lr.urlName.getValue());
 
 									TableView<DetailData> detailTable = new TableView<DetailData>();
 									detailTable.setPrefWidth(Double.MAX_VALUE);
