@@ -17,7 +17,7 @@ public class Test{
 			String seed2 = "https://docs.oracle.com/javase/tutorial/essential/concurrency/runthread.html";
 			String seed3 = "http://www.repubblica.it/esteri/2015/12/08/news/migranti_naufragio_al_largo_della_turchia_6_bambini_morti-129024370/?ref=HRER1-1";
 			
-			SiteCrawler crawler = WebFactoryWSA.getSiteCrawler(new URI("http://www.repubblica.it"), FileSystems.getDefault().getPath("C:\\Users\\Flati\\Downloads\\WSA-test"));
+			SiteCrawler crawler = WebFactoryWSA.getSiteCrawler(new URI("http://www.repubblica.it"), FileSystems.getDefault().getPath("C:\\Users\\Pan\\Desktop\\test gui wsa"));
 			
 //			crawler.addSeed(new URI(seed));
 //			crawler.addSeed(new URI(seed2));

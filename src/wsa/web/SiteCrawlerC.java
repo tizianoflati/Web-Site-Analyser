@@ -1,5 +1,6 @@
 package wsa.web;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -68,7 +69,7 @@ public class SiteCrawlerC implements SiteCrawler{
 		if(saver != null)
 		{
 			System.out.println("SCHEDULING SAVER");
-			saver.scheduleAtFixedRate(saverRunnable, 0, 1, TimeUnit.MINUTES);
+			saver.scheduleAtFixedRate(saverRunnable, 0, 10, TimeUnit.SECONDS);
 		}
 	}
 
@@ -97,7 +98,7 @@ public class SiteCrawlerC implements SiteCrawler{
 			return Optional.of(cr);
 		}
 		Optional<CrawlerResult> optional = crawler.get();
-		if( optional.isPresent() ) {
+		if( optional.isPresent() && optional.get().uri != null) {
 			crawlerResultList.add(optional.get());
 			times++;
 		}
@@ -107,14 +108,16 @@ public class SiteCrawlerC implements SiteCrawler{
 	@Override
 	public CrawlerResult get(URI uri) {
 		if( !this.getLoaded().contains(uri) && !this.getErrors().contains(uri)) throw new IllegalArgumentException();		
-		for(CrawlerResult cr : crawlerResultList) 
+		
+		for(CrawlerResult cr : crawlerResultList)
 			if( cr.uri.equals(uri))
 				return cr;
-		
+
 		CrawlerResult last = null;
 		do {
 			Optional<CrawlerResult> optional = crawler.get();
 			last = optional.get();
+			
 			crawlerResultList.add(last);
 		} while( !last.uri.equals(uri) );
 		

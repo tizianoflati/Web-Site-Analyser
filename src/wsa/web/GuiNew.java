@@ -135,6 +135,7 @@ public class GuiNew extends Application{
 		private String id;
 		
 		private ObservableList<LinkResult> obsList = FXCollections.observableArrayList();
+		private Timer timer;
 
 		
 		
@@ -208,8 +209,8 @@ public class GuiNew extends Application{
 		public void start(){
 
 				siteCrawler.start();
-				Timer timer = new Timer();
-
+				this.timer = new Timer();
+				
 				timer.schedule( new TimerTask() {				
 					@Override
 					public void run() {
@@ -273,11 +274,11 @@ public class GuiNew extends Application{
 		primaryStage.setTitle("WSA");
 		primaryStage.show();
 		primaryStage.setOnCloseRequest( new EventHandler<WindowEvent>() {
-			
 			@Override
 			public void handle(WindowEvent event) {
-					for( Map.Entry<Integer, WebsiteState> entry : stateMap.entrySet() ) {
-						entry.getValue().siteCrawler.cancel();
+					for( WebsiteState wss : stateMap.values() ) {
+						if(wss.siteCrawler != null) wss.siteCrawler.cancel();
+						if(wss.timer != null) wss.timer.cancel();
 					}
 				//itera su statemap e chiudi i sitecrawler!!
 			}

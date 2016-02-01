@@ -23,7 +23,8 @@ public class LoaderC implements Loader {
 			System.out.println("WAITING " + random/1000 + "s BEFORE DOWNLOADING");
 			Thread.sleep(random);
 		} catch (InterruptedException e1) {
-			e1.printStackTrace();
+			// e1.printStackTrace();
+			return null;
 		}
 		
 		ParsedC parsed = null;
