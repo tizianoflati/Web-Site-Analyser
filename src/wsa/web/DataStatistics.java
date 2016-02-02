@@ -6,6 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * lanciare thread su pulsante stat
+ * @author Pan
+ *
+ */
+
 public class DataStatistics {
 	private SiteCrawler siteCrawler;
 

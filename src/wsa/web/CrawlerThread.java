@@ -154,7 +154,10 @@ public class CrawlerThread extends Thread {
 						System.out.println("RISULTATO PER "+loadResult.url+" : " + (loadResult.exc == null ? "OK" : "FAILED: " + loadResult.exc.toString()));
 						if(loadResult.parsed != null)
 						{
+							System.out.println("=============================");
+							System.out.println("URL:" + loadResult.url);
 							System.out.println("# IMMAGINI: " + loadResult.parsed.getByTag("img").size());
+							System.out.println("# LINKS: " + loadResult.parsed.getLinks().size());
 							// for(Parsed.Node img : loadResult.parsed.getByTag("img")) System.out.println("\t" + img.attr.get("src"));
 						}
 

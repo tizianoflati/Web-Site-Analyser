@@ -17,6 +17,7 @@ import java.util.TimerTask;
 
 import javafx.application.Application;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -48,6 +49,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import javafx.util.Callback;
@@ -81,23 +83,37 @@ public class GuiNew extends Application{
 		private final SimpleStringProperty urlName;
 		private final SimpleBooleanProperty linkPage;
 		private final SimpleStringProperty exception;
-		private SimpleStringProperty links;
+		private final SimpleIntegerProperty outgoing;
+		private final SimpleIntegerProperty incoming;
 		private List<URI> uriList;
+		private List<URI> uriIncomingList;
 
 		private LinkResult(CrawlerResult result) {
 			this.urlName = new SimpleStringProperty(result.uri.toString());
 			this.linkPage = new SimpleBooleanProperty(result.linkPage);
 			this.exception = new SimpleStringProperty(result.exc == null ? "OK" : result.exc.toString() + ": " + result.exc.getMessage());
+			this.outgoing = new SimpleIntegerProperty(result.links == null ? 0 : result.links.size());
+			this.incoming = new SimpleIntegerProperty(0);
 			this.uriList = result.links;
+			this.uriIncomingList = new ArrayList<>();
 		}
 
-
+/**
 		public SimpleStringProperty getObsLinks() {
 			String slinks = "";
 			for(URI u : uriList)
 				slinks = slinks + u.toString() + "\n";
 			this.links = new SimpleStringProperty(slinks);
 			return links;
+		}
+		**/
+		public void add(URI uri) {
+			this.uriIncomingList.add(uri);
+			this.incoming.set(this.incoming.get() + 1);
+		}
+		
+		public SimpleIntegerProperty getOutgoingLinksNumber(){
+			return outgoing;
 		}
 		
 		public SimpleBooleanProperty getLinkPage(){
@@ -215,10 +231,17 @@ public class GuiNew extends Application{
 					@Override
 					public void run() {
 
-						Optional<CrawlerResult> cr = null;
-						while((cr=siteCrawler.get()).isPresent() && cr.get().uri != null)
+						Optional<CrawlerResult> cro = null;
+						while((cro=siteCrawler.get()).isPresent() && cro.get().uri != null)
 						{
-							LinkResult lr = new LinkResult(cr.get());
+							CrawlerResult cr = cro.get();
+							for(LinkResult lr : obsList) {
+								if(cr.links != null)
+									if(cr.links.contains(lr.urlName.get()) )
+										lr.add(cr.uri);
+							}
+							LinkResult lr = new LinkResult(cr);
+							System.out.println("CRAWLER RESULT: " + cro.get().uri + "\t" + cro.get().links);
 							obsList.add(lr);				
 						}
 					}
@@ -492,90 +515,114 @@ System.out.println("dom = " + stateMap.get(currentWebsite).dominioText.getText()
 
 			if( stateMap.get(currentWebsite).dominioText.getText().isEmpty() || stateMap.get(currentWebsite).seedsList.isEmpty() ) {
 				
-				createPopup("Dati insufficienti!");
+				createPopup("Dati insufficienti!", borderPane);
 				
 			}
 			else {
-				//START
-				WebsiteState wss = stateMap.get(currentWebsite);
-				SiteCrawler siteCrawler = null;
-				try
-				{
-					URI uri = new URI(wss.dominioText.getText());
-					siteCrawler = WebFactoryWSA.getSiteCrawler(uri, wss.getPath());
-					wss.setSiteCrawler(siteCrawler);
-					for(TextField tf : wss.seedsList) {
-						siteCrawler.addSeed(new URI(tf.getText()));
+				//Crea finestra per salvare
+				Stage stage = new Stage();
+
+				Text text = new Text("save per salvare su disco");
+				Text text2 = new Text("START per continuare");
+				text.setTextAlignment(TextAlignment.CENTER);
+				text2.setTextAlignment(TextAlignment.CENTER);
+				
+				Button start = new Button("START");
+				
+				HBox hbox = new HBox(saveB, start);
+				hbox.setAlignment(Pos.CENTER);
+				hbox.setSpacing(20);
+
+				VBox vbPop = new VBox(text, text2, hbox);
+				vbPop.setAlignment(Pos.CENTER);
+				vbPop.setSpacing(10);
+
+				Scene scene = new Scene(vbPop, 70, 70);
+				stage.initModality(Modality.WINDOW_MODAL);
+				stage.initOwner(borderPane.getScene().getWindow());
+				stage.setScene(scene);
+				stage.show();	
+				
+				start.setOnAction( eStart -> {
+					//START
+					WebsiteState wss = stateMap.get(currentWebsite);
+					SiteCrawler siteCrawler = null;
+					try
+					{
+						URI uri = new URI(wss.dominioText.getText());
+						siteCrawler = WebFactoryWSA.getSiteCrawler(uri, wss.getPath());
+						wss.setSiteCrawler(siteCrawler);
+						for(TextField tf : wss.seedsList) {
+							siteCrawler.addSeed(new URI(tf.getText()));
+						}
 					}
-				}
-				catch(URISyntaxException e1)
-				{
-					createPopup("errore URI");
-				}
-				catch(IOException e2)
-				{
-					createPopup("errore IO");
-				}
-				catch(IllegalArgumentException e3)
-				{
-					createPopup("Dominio non corretto");
-					return;
-				}
-				
-				//aggiorna la VBox per levare il tasto "save" ed aggiungere "stat"
-				
-				Button stat = new Button("Stat");
-				stat.setOnAction( eStat -> {
-					Stage stage = new Stage();
+					catch(URISyntaxException e1)
+					{
+						createPopup("errore URI", borderPane);
+					}
+					catch(IOException e2)
+					{
+						createPopup("errore IO", borderPane);
+					}
+					catch(IllegalArgumentException e3)
+					{
+						createPopup("Dominio non corretto", borderPane);
+						return;
+					}
 					
-				GridPane gridpane = new GridPane();
-				ObservableList<String> names = FXCollections.observableArrayList(
+					//aggiorna la VBox per levare il tasto "save" ed aggiungere "stat"
+				
+					
+					Button stat = new Button("Stat");
+					stat.setOnAction( eStat -> {
+						Stage statStage = new Stage();
+					
+						GridPane gridpane = new GridPane();
+						ObservableList<String> names = FXCollections.observableArrayList(
 					             "Visited URI", "Inner URIs", "URI errs num");
 					     
-				ListView<String> listView = new ListView<String>(names);
-				GridPane.setConstraints(listView, 1, 1);
+						ListView<String> listView = new ListView<String>(names);
+						GridPane.setConstraints(listView, 1, 1);
 					     
-				// don't forget to add children to gridpane
-				gridpane.getChildren().addAll(listView);
+						// don't forget to add children to gridpane
+						gridpane.getChildren().addAll(listView);
 				   
-				Scene scene = new Scene(gridpane,600, 600);
-				listView.autosize();
-				stage.setScene(scene);
-				stage.show();
-					
-				});
+						Scene statScene = new Scene(gridpane,600, 600);
+						listView.autosize();
+						statStage.setScene(statScene);
+						statStage.show();
+					});
 				
-				VBox nvb = new VBox(addSeedB, goB, stat);
-				nvb.setPrefWidth(100);
-				nvb.setSpacing(20);
-				nvb.setAlignment(Pos.TOP_CENTER);
-				nvb.setStyle("-fx-background-color: darkturquoise");
+					VBox nvb = new VBox(addSeedB, goB, stat);
+					nvb.setPrefWidth(100);
+					nvb.setSpacing(20);
+					nvb.setAlignment(Pos.TOP_CENTER);
+					nvb.setStyle("-fx-background-color: darkturquoise");
 
-				if(goB.getText().equalsIgnoreCase("PAUSE")) {
-					goB.setText("RESUME");
-				}
-				else {
-					goB.setText("PAUSE");
-				}
-				//carica lo stato associato al webSite e...
+					if(goB.getText().equalsIgnoreCase("PAUSE")) {
+						goB.setText("RESUME");
+					}
+					else {
+						goB.setText("PAUSE");
+					}
+					//	carica lo stato associato al webSite e...
 				
-				wss.setTable(createTableView());
+					wss.setTable(createTableView());
 System.out.println("WebsiteState " + currentWebsite + " loaded");
-				//..setta la nuova parte destra di GUI
-				wss.setRightVBox(nvb);
-				//setta gli uri forniti
-				wss.showInfo();
+					//..setta la nuova parte destra di GUI
+					wss.setRightVBox(nvb);
+					//	setta gli uri forniti
+					wss.showInfo();
 				
-				wss.start();
+					wss.start();
 
-				//aggiorna il borderPane con i dati nuovi
-				borderPane.setRight(nvb);
+					//aggiorna il borderPane con i dati nuovi
+					borderPane.setRight(nvb);
 				System.out.println(currentWebsite);
-				ScrollPane spCenter = new ScrollPane(wss.getGroup());
-				borderPane.setCenter(spCenter);
-			}
-
-
+					ScrollPane spCenter = new ScrollPane(wss.getGroup());
+					borderPane.setCenter(spCenter);
+					});
+				}
 		});
 
 
@@ -583,7 +630,10 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 		directoryChooser.setTitle("Open Resource File");
 
 		saveB.setOnAction( (e) -> {
-			final File selectedDirectory = directoryChooser.showDialog(new Stage());
+			Stage saveStage = new Stage();
+			saveStage.initModality(Modality.WINDOW_MODAL);
+			saveStage.initOwner(borderPane.getScene().getWindow());
+			final File selectedDirectory = directoryChooser.showDialog(saveStage);
 			if (selectedDirectory != null) {
 System.out.println(selectedDirectory.getAbsolutePath()); //Test
 				stateMap.get(currentWebsite).setPath(selectedDirectory.toPath());
@@ -650,7 +700,7 @@ System.out.println(newUri.getText());
 	 * 
 	 * @param string il messaggio di avviso da visualizzare
 	 */
-	private void createPopup(String string) {
+	private void createPopup(String string, Parent parent) {
 		Stage stage = new Stage();
 
 		Text text = new Text(string);
@@ -666,6 +716,8 @@ System.out.println(newUri.getText());
 		vbPop.setSpacing(10);
 
 		Scene scene = new Scene(vbPop, 70, 70);
+		stage.initModality(Modality.WINDOW_MODAL);
+		stage.initOwner(parent.getScene().getWindow());
 		stage.setScene(scene);
 		stage.show();		
 	}
@@ -692,7 +744,7 @@ System.out.println(stateMap.get(currentWebsite));
 		table.setEditable(true);
 
 		TableColumn<LinkResult, String> urlNameCol = new TableColumn<LinkResult, String>("URL");
-		urlNameCol.setMinWidth(100);
+		urlNameCol.setMinWidth(300);
 		urlNameCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, String>, ObservableValue<String>>() {
 			public ObservableValue<String> call(CellDataFeatures<LinkResult, String> linkResultCell) {
 				return linkResultCell.getValue().getUrlName();
@@ -705,6 +757,27 @@ System.out.println(stateMap.get(currentWebsite));
 				return linkResultCell.getValue().getStatus();
 			}
 		});
+		TableColumn<LinkResult, Boolean> isIntDomCol = new TableColumn<LinkResult, Boolean>("Interno");
+		isIntDomCol.setMinWidth(100);
+		isIntDomCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, Boolean>, ObservableValue<Boolean>>() {
+			public ObservableValue<Boolean> call(CellDataFeatures<LinkResult, Boolean> linkResultCell) {
+				return linkResultCell.getValue().getLinkPage();
+			}
+		});
+		TableColumn<LinkResult, Number> outgoingLinksCol = new TableColumn<LinkResult, Number>("Outgoing");
+		outgoingLinksCol.setMinWidth(100);
+		outgoingLinksCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, Number>, ObservableValue<Number>>() {
+			public ObservableValue<Number> call(CellDataFeatures<LinkResult, Number> linkResultCell) {
+				return linkResultCell.getValue().getOutgoingLinksNumber();
+			}
+		});
+		TableColumn<LinkResult, Number> incomingLinksCol = new TableColumn<LinkResult, Number>("Incoming");
+		incomingLinksCol.setMinWidth(100);
+		incomingLinksCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, Number>, ObservableValue<Number>>() {
+			public ObservableValue<Number> call(CellDataFeatures<LinkResult, Number> linkResultCell) {
+				return linkResultCell.getValue().incoming;
+			}
+		});
 		TableColumn<LinkResult, Boolean> detailedCol = new TableColumn<LinkResult, Boolean>("DETAILS");
 		detailedCol.setMinWidth(100);
 		//detailedCol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, String>, ObservableValue<String>>() {
@@ -714,15 +787,24 @@ System.out.println(stateMap.get(currentWebsite));
 		// });
 
 
-		TableColumn<LinkResult, String> parallelDcol = new TableColumn<LinkResult, String>("empty");
-		parallelDcol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, String>, ObservableValue<String>>() {
-			public ObservableValue<String> call(CellDataFeatures<LinkResult, String> linkResultCell) {
-				System.out.println(linkResultCell.getValue().getObsLinks().toString());
-
-				return linkResultCell.getValue().getObsLinks();
-
-			}
-		});
+//		TableColumn<LinkResult, String> parallelDcol = new TableColumn<LinkResult, String>("empty");
+//		parallelDcol.setCellValueFactory(new Callback<CellDataFeatures<LinkResult, String>, ObservableValue<String>>() {
+//			public ObservableValue<String> call(CellDataFeatures<LinkResult, String> linkResultCell) {
+//				System.out.println(linkResultCell.getValue().getObsLinks().toString());
+//
+//				return linkResultCell.getValue().getObsLinks();
+//
+//			}
+//		});
+		
+		/**
+		 * Future<LoadResult> future= usare webfactoryWSA.getAsyncloader.submit nuovo uri
+		 * loadresutl prendersi il future.get
+		 * parsed p = resutl.parsed
+		 * p.vist(mio consumer)
+		 * mio consumer incrementa contatore ecc
+		 * mio consumer è il numero nodi albero
+		 */
 
 
 		detailedCol.setCellFactory(
@@ -742,7 +824,7 @@ System.out.println("detailed clicked!!! ");
 									LinkResult lr = (LinkResult)this.getTableRow().getItem();
 									
 System.out.println("index = " + this.getIndex() + " - "+ this.getTableRow().getIndex() +  " - item:" + lr.urlName.getValue());
-
+System.out.println("URI LIST:" + lr.uriList.size() + " " + lr.uriList);
 									TableView<DetailData> detailTable = new TableView<DetailData>();
 									detailTable.setPrefWidth(Double.MAX_VALUE);
 									//TableColumn col =
@@ -808,7 +890,10 @@ System.out.println("index = " + this.getIndex() + " - "+ this.getTableRow().getI
 
 		table.getColumns().add(urlNameCol);
 		table.getColumns().add(statusCol);
+		table.getColumns().add(isIntDomCol);
+		table.getColumns().add(outgoingLinksCol);
 		table.getColumns().add(detailedCol);
+		table.getColumns().add(incomingLinksCol);
 
 		TableCell<LinkResult, String> cell;
 
