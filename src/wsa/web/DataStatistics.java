@@ -8,7 +8,6 @@ import java.util.Set;
 
 /**
  * lanciare thread su pulsante stat
- * @author Pan
  *
  */
 
