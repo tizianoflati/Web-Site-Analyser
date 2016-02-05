@@ -18,7 +18,7 @@ import java.util.Set;
 
 public class WebSiteLoader {
 
-	public static void load(List<CrawlerResult> crawlerResultsList, Set<URI> loaded, Set<URI> toLoad, Set<URI> errs, File dir) throws IOException {
+	public static URI load(List<CrawlerResult> crawlerResultsList, Set<URI> loaded, Set<URI> toLoad, Set<URI> errs, File dir) throws IOException {
 		File[] files = dir.listFiles(
     			new FilenameFilter() {
 			@Override
@@ -29,26 +29,25 @@ public class WebSiteLoader {
 		if(files.length == 0) throw new IOException();
 		File file = files[0];
 		
+		URI dom = null;
 		BufferedReader bufferedReader = null;
-
-		URI uriCrawler;
-		boolean linkPage;
-		List<URI> links = new ArrayList<>();
-		List<String> errRawlinks = new ArrayList<>();
-		Exception exc = null;
 
 		try {
 			bufferedReader = new BufferedReader( new FileReader(file));
-			String dom = bufferedReader.readLine();
+			dom = new URI(bufferedReader.readLine());
 
 			int toLoadSize = Integer.parseInt(bufferedReader.readLine());
 			for(int i = 0; i < toLoadSize; i++)
 				toLoad.add(new URI(bufferedReader.readLine()));
 			int scaricatiSize = Integer.parseInt(bufferedReader.readLine());
 			for(int i = 0; i < scaricatiSize; i++) {
-				uriCrawler = new URI(bufferedReader.readLine());
+				
+				List<URI> links = new ArrayList<>();
+				List<String> errRawlinks = new ArrayList<>();
+				
+				URI uriCrawler = new URI(bufferedReader.readLine());
 
-				linkPage = Boolean.parseBoolean(bufferedReader.readLine());
+				boolean linkPage = Boolean.parseBoolean(bufferedReader.readLine());
 
 				int linksSize = Integer.parseInt(bufferedReader.readLine());
 				for(int j = 0; j < linksSize; j++){
@@ -60,6 +59,7 @@ public class WebSiteLoader {
 					errRawlinks.add(bufferedReader.readLine());
 				}
 
+				Exception exc = null;
 				String exceptionLine = bufferedReader.readLine();
 				if( exceptionLine.isEmpty() ) {
 					loaded.add(uriCrawler);
@@ -113,6 +113,8 @@ public class WebSiteLoader {
 			if(bufferedReader != null)
 				bufferedReader.close();
 		}
+		
+		return dom;
 	}
 	
 	public static void main(String[] args) throws URISyntaxException, IOException {

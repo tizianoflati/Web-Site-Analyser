@@ -412,6 +412,15 @@ System.out.println("new state created");
 			//si crea il bottone relativo al website nuovo			
 	
 			Button newWebSiteB = createNewWebsiteB();
+			
+			VBox ncurrentCenter = createCenter();
+			VBox currentRight = createRightUi(ncurrentCenter);
+			ScrollPane centerSp= new ScrollPane(ncurrentCenter);
+			centerSp.setFitToHeight(true);
+			centerSp.setFitToWidth(true);
+			borderPane.setCenter(centerSp);
+			borderPane.setRight(currentRight);
+			
 			//questo nuovo bottone deve essere poi aggiunto alla parte sinistra del borderpane
 			//che a sua volta è un vbox fisso della GUI!!
 			
@@ -465,6 +474,10 @@ System.out.println(selectedDir.toString());
 				SiteCrawler siteCrawler = WebFactoryWSA.getSiteCrawler(null, selectedDir.toPath());
 				WebsiteState wss = createNewState();
 				leftVbox.getChildren().add(createNewWebsiteB());
+				
+				borderPane.setCenter(stateMap.get(currentWebsite).getCenterTable());
+				createStartedRightUi();
+				
 				wss.showInfo();
 				createStartedRightUi();
 				wss.setSiteCrawler(siteCrawler);
@@ -537,7 +550,6 @@ System.out.println("websiteNumber: " + websiteNumber);
 	}
 
 	private Button createResumeB() {
-		//TODO
 		Button resume = new Button("Pause");
 			resume.setOnAction( e -> {
 				if(resume.getText().equalsIgnoreCase("Pause")){
@@ -597,22 +609,21 @@ System.out.println("websiteNumber: " + websiteNumber);
 		siteMap.put(newWebsiteB, currentWebsite);
 		//WebsiteState nwss = new WebsiteState("Website " + websiteNumber);
 		
-		//TODO se è stato creato dal load button deve settare
-		//la parte centrale del borderPane con la tabella!!
-		if(false) {
-		VBox ncurrentCenter = createCenter();
-		VBox currentRight = createRightUi(ncurrentCenter);
-		ScrollPane centerSp= new ScrollPane(ncurrentCenter);
-		centerSp.setFitToHeight(true);
-		centerSp.setFitToWidth(true);
-		borderPane.setCenter(centerSp);
-		borderPane.setRight(currentRight);
-		}
-		else {
-			borderPane.setCenter(stateMap.get(currentWebsite).getCenterTable());
-			createStartedRightUi();
+		// TODO: se è stato creato con addSite
+//		if(newWebSite) {
+//			VBox ncurrentCenter = createCenter();
+//			VBox currentRight = createRightUi(ncurrentCenter);
+//			ScrollPane centerSp= new ScrollPane(ncurrentCenter);
+//			centerSp.setFitToHeight(true);
+//			centerSp.setFitToWidth(true);
+//			borderPane.setCenter(centerSp);
+//			borderPane.setRight(currentRight);
+//		}
+//		else {
+//			borderPane.setCenter(stateMap.get(currentWebsite).getCenterTable());
+//			createStartedRightUi();
 			//borderPane.setRight(stateMap.get(currentWebsite).getRightVBox());
-		}
+//		}
 
 
 		newWebsiteB.setOnAction( f -> {
@@ -1002,10 +1013,6 @@ System.out.println(stateMap.get(currentWebsite));
                     WebView wView = new WebView();
                     WebEngine we = wView.getEngine();
                     Stage stage = new Stage();
-                    
-                    WebsiteState wss = stateMap.get(currentWebsite);
-                    String dominio = wss.dominioText.getText();
-                    System.out.println("____--======--____ : " + dominio);
                     
                     LinkResult lr = table.getSelectionModel().selectedItemProperty().get();
 					System.out.println("%%%%%%% : " + lr.urlName);

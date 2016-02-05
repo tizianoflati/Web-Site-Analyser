@@ -17,7 +17,7 @@ public class AsyncLoaderC implements AsyncLoader{
 	
 	@Override
 	public Future<LoadResult> submit(URL url) {
-		return executorService.submit( () -> { 
+		return executorService.submit( () -> {
 			return loader.load(url);
 		});
 	}

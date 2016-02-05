@@ -3,6 +3,7 @@ package wsa.web;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -113,6 +114,7 @@ public class CrawlerThread extends Thread {
 	{
 		super.run();
 		
+		setCrawlerState(CrawlerState.RUNNING);
 		System.out.println("NEW THREAD: " + Thread.currentThread().getName() + ". " + "NUMERO DI THREAD ATTIVI: " + Thread.activeCount());
 
 		while(true)
@@ -147,8 +149,22 @@ public class CrawlerThread extends Thread {
 				System.out.println("DOWNLOADING:" + uri);
 
 				resultThreadsExecutor.submit(() ->{
+					
+					URL url = null;
+					try
+					{
+						url = uri.toURL();
+					}
+					catch (MalformedURLException e)
+					{
+						getResults().add(new CrawlerResult(null, false, null, null, e));
+						getErrors().add(uri);
+						return;
+					}
+					
+					Future<LoadResult> future = loader.submit(url);
+					
 					try{
-						Future<LoadResult> future = loader.submit(uri.toURL());
 						LoadResult loadResult = future.get();
 						if(loadResult == null) return;
 						System.out.println("RISULTATO PER "+loadResult.url+" : " + (loadResult.exc == null ? "OK" : "FAILED: " + loadResult.exc.toString()));
@@ -212,14 +228,13 @@ public class CrawlerThread extends Thread {
 							getLoaded().add(uri);
 						}
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					System.out.println("=========== INTERROTTO ===========");
+					// e.printStackTrace();
+					future.cancel(true);
+					System.out.println("DOWNLOAD INTERRUPTED? " + future.isCancelled());
+					
 				} catch (ExecutionException e) {
 					e.printStackTrace();
-				}
-				catch (MalformedURLException e)
-				{
-					getResults().add(new CrawlerResult(null, false, null, null, e));
-					getErrors().add(uri);
 				}
 				});
 //			}

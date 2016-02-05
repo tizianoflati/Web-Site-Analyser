@@ -1,11 +1,9 @@
 package wsa.web;
 
-import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executors;
@@ -16,9 +14,10 @@ public class SiteCrawlerC implements SiteCrawler{
 	
 	private URI dom;
 	private Crawler crawler;
+	
+	private Path dir = null;
 	private ScheduledThreadPoolExecutor saver;
 	private Runnable saverRunnable;
-	//private Map<URI, CrawlerResult> crawlerResultMap = new HashMap<URI, CrawlerResult>();
 	private List<CrawlerResult> crawlerResultList = new ArrayList<>();
 	private int times = 0;
 	
@@ -44,10 +43,10 @@ public class SiteCrawlerC implements SiteCrawler{
 	public SiteCrawlerC(Crawler crawler, URI dom, Path dir, List<CrawlerResult> crawlerResultsList) {
 		this.crawler = crawler;
 		this.dom = dom;
+		this.dir = dir;
 		
 		if(dir != null)
 		{
-			this.saver = new ScheduledThreadPoolExecutor(1);
 			this.saverRunnable = () -> {
 				WebSiteSaver.save(this, dir.toFile(), dom);
 			};
@@ -66,27 +65,31 @@ public class SiteCrawlerC implements SiteCrawler{
 		if(isRunning()) return;
 		
 		crawler.start();
-		if(saver != null)
+		if(dir != null)
 		{
 			System.out.println("SCHEDULING SAVER");
-			saver.scheduleAtFixedRate(saverRunnable, 0, 10, TimeUnit.SECONDS);
+			this.saver = new ScheduledThreadPoolExecutor(1);
+			this.saver.scheduleAtFixedRate(saverRunnable, 0, 10, TimeUnit.SECONDS);
 		}
 	}
 
 	@Override
 	public void suspend() {
 		crawler.suspend();
-		if(saver != null) saver.shutdownNow();
-		
-		// To force writing site state on disk
-		if(saver != null) Executors.newFixedThreadPool(1).submit(saverRunnable);
+		if(dir != null)
+		{
+			saver.shutdownNow();
+			
+			// To force writing site state on disk
+			Executors.newFixedThreadPool(1).submit(saverRunnable);
+		}
 	}
 
 	@Override
 	public void cancel() {
 		crawler.cancel();
 		
-		if(saver != null) saver.shutdownNow();
+		if(dir != null) saver.shutdownNow();
 	}
 
 	@Override

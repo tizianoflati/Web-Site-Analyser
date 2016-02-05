@@ -101,9 +101,9 @@ public class WebFactoryWSA extends WebFactory{
     		
     		
     		// Load from disk
-    		WebSiteLoader.load(crawlerResultsList, loaded, toLoad, errs, dir.toFile());
+    		URI domain = WebSiteLoader.load(crawlerResultsList, loaded, toLoad, errs, dir.toFile());
     		
-    		return new SiteCrawlerC(getCrawler(loaded, toLoad, errs, pageLink), dom, dir, crawlerResultsList);
+    		return new SiteCrawlerC(getCrawler(loaded, toLoad, errs, pageLink), domain, dir, crawlerResultsList);
     	}
     	
     	return null;
