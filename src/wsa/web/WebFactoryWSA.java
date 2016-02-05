@@ -76,13 +76,7 @@ public class WebFactoryWSA extends WebFactory{
     	if(dom == null && dir == null) throw new IllegalArgumentException();
     	if(dom != null && !SiteCrawlerC.checkDomain(dom)) throw new IllegalArgumentException();
     	if(dir != null && !dir.toFile().isDirectory()) throw new IllegalArgumentException();
-    	if(dom == null && dir.toFile().listFiles(
-    			new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return name.endsWith(".wsa");
-			}
-		}).length == 0) throw new IllegalArgumentException();
+    	
     	
     	Predicate<URI> pageLink = (u) -> {return SiteCrawlerC.checkSeed(dom, u);};
     	
@@ -105,8 +99,9 @@ public class WebFactoryWSA extends WebFactory{
     		Set<URI> errs = new HashSet<URI>();
     		List<CrawlerResult> crawlerResultsList = new ArrayList<CrawlerResult>();
     		
+    		
     		// Load from disk
-    		WebSiteLoader.load(crawlerResultsList, loaded, toLoad, errs, dir.toFile(), dom);
+    		WebSiteLoader.load(crawlerResultsList, loaded, toLoad, errs, dir.toFile());
     		
     		return new SiteCrawlerC(getCrawler(loaded, toLoad, errs, pageLink), dom, dir, crawlerResultsList);
     	}

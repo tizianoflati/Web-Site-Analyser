@@ -19,7 +19,7 @@ public class LoaderC implements Loader {
 	public LoadResult load(URL url) {
 
 		try {
-			long random = 1000 * (1+rand.nextInt(5));
+			long random = 0 * (1+rand.nextInt(5));
 			System.out.println("WAITING " + random/1000 + "s BEFORE DOWNLOADING");
 			Thread.sleep(random);
 		} catch (InterruptedException e1) {

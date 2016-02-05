@@ -169,9 +169,11 @@ public class CrawlerThread extends Thread {
 							linkPage = true;
 							links = new ArrayList<>();
 							linksErrors = new ArrayList<>();
+							
+							if(loadResult.parsed != null)
 							for(String link : loadResult.parsed.getLinks())
 							{
-								// System.out.println("ADDING NEW LINK TO CRAWLER RESULT: " + link);
+//								 System.out.println("ADDING NEW LINK TO CRAWLER RESULT: " + link);
 	
 								try
 								{
@@ -210,7 +212,7 @@ public class CrawlerThread extends Thread {
 							getLoaded().add(uri);
 						}
 				} catch (InterruptedException e) {
-//					e.printStackTrace();
+					e.printStackTrace();
 				} catch (ExecutionException e) {
 					e.printStackTrace();
 				}

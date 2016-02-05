@@ -14,7 +14,7 @@ public class WebSiteSaver {
 		System.out.println("SAVING " + dominio + " ON DISK: " + selectedDir);
 		
 		try {
-			BufferedWriter writer = new BufferedWriter( new FileWriter( new File(selectedDir, dominio.getHost().toString()+".txt") ) );
+			BufferedWriter writer = new BufferedWriter( new FileWriter( new File(selectedDir, dominio.getHost().toString()+".wsa") ) );
 			
 			String newLine = System.lineSeparator();
 			writer.write(dominio.toString() + newLine);
@@ -51,7 +51,6 @@ System.out.println("------ Writing scaricati... + " + scaricati);
 				
 				if( r.exc != null) {
 					writer.write(r.exc.toString() + newLine);
-					writer.write(r.exc.getMessage() + newLine);
 				}
 				else {
 					writer.write(newLine);
