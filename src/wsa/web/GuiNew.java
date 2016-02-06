@@ -97,12 +97,10 @@ public class GuiNew extends Application{
 		private final SimpleStringProperty exception;
 		private final SimpleIntegerProperty outgoing;
 		private final SimpleIntegerProperty incoming;
-		private URI uri;
 		private List<URI> uriList;
 		private List<URI> uriIncomingList;
 
 		private LinkResult(CrawlerResult result) {
-			this.uri = result.uri;
 			this.urlName = new SimpleStringProperty(result.uri.toString());
 			this.linkPage = new SimpleBooleanProperty(result.linkPage);
 			this.exception = new SimpleStringProperty(result.exc == null ? "OK" : result.exc.toString() + ": " + result.exc.getMessage());
@@ -258,7 +256,7 @@ public class GuiNew extends Application{
 							CrawlerResult cr = cro.get();
 							for(LinkResult lr : obsList) {
 								if(cr.links != null)
-									if(cr.links.contains(lr.uri) )
+									if(cr.links.contains(lr.urlName.get()) )
 										lr.add(cr.uri);
 							}
 							LinkResult lr = new LinkResult(cr);
