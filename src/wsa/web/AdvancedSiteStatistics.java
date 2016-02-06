@@ -15,7 +15,7 @@ public class AdvancedSiteStatistics {
 	public AdvancedSiteStatistics(Collection<CrawlerResult> results) {
 		
 		for(CrawlerResult result : results)
-			if(result.exc != null && result.links != null)
+			if(result.exc == null && result.links != null)
 				graph.put(result.uri, result.links);
 	}
 	
@@ -57,7 +57,11 @@ public class AdvancedSiteStatistics {
 			for(URI v : graph.keySet())
 			{
 				if(u == v) d.put(v, 0);
-				else if(graph.get(u).contains(v)) d.put(v, 1);
+				else if(graph.get(u).contains(v))
+				{
+					System.out.println(graph.get(u).contains(v) + "\t" + graph.get(u));
+					d.put(v, 1);
+				}
 				else d.put(v, Integer.MAX_VALUE);
 			}
 		}
@@ -70,6 +74,10 @@ public class AdvancedSiteStatistics {
 					Integer uz = distances.get(u).get(z);
 					Integer zv = distances.get(z).get(v);
 					
+					if(uv == Integer.MAX_VALUE) continue;
+					if(uz == Integer.MAX_VALUE) continue;
+					if(zv == Integer.MAX_VALUE) continue;
+					
 					if(uv > uz + zv)
 						distances.get(u).put(v, uz + zv);
 				}
@@ -77,8 +85,11 @@ public class AdvancedSiteStatistics {
 		Integer max = 0;
 		for(URI u : distances.keySet())
 			for(URI v : distances.keySet())
-				max = Math.max(max, distances.get(u).get(v));
-		
+			{
+				Integer d = distances.get(u).get(v);
+				if(d == Integer.MAX_VALUE) continue;
+				else max = Math.max(max, d);
+			}
 		return max;
 	}
 }

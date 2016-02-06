@@ -49,6 +49,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -475,6 +476,7 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 System.out.println(selectedDir.toString());
 				SiteCrawler siteCrawler = WebFactoryWSA.getSiteCrawler(null, selectedDir.toPath());
 				WebsiteState wss = createNewState();
+				
 				leftVbox.getChildren().add(createNewWebsiteB());
 				
 				borderPane.setCenter(stateMap.get(currentWebsite).getCenterTable());
@@ -532,18 +534,49 @@ System.out.println("websiteNumber: " + websiteNumber);
 		stat.setOnAction( eStat -> {
 			Stage statStage = new Stage();
 		
-			GridPane gridpane = new GridPane();
+			Pane pane = new Pane();
 			ObservableList<String> names = FXCollections.observableArrayList(
-		             "Visited URI", "Inner URIs", "URI errs num");
+		             "Visited URI", 
+		             "Inner URIs", 
+		             "URI errs num",
+		             "Max incoming links",
+		             "Max outgoing links",
+		             "Diameter"
+		             );
+			
+			WebsiteState wss = stateMap.get(currentWebsite);
+			List<CrawlerResult> crList = new ArrayList<>();
+			
+			DataStatistics data = new DataStatistics(wss.siteCrawler);
+			
+			for( URI u : wss.siteCrawler.getLoaded() ) {
+				crList.add( wss.siteCrawler.get(u) );
+			}
+			
+			AdvancedSiteStatistics advancedData = new AdvancedSiteStatistics(crList);
+			
+			ObservableList<String> values = FXCollections.observableArrayList(
+					//TODO:
+		             "" + data.getVisitedURI(),
+		             "" + data.getInnerDomURI(),
+		             "" + data.uriErrsNum(),
+		             "" + data.getMaxIncomingLinks(),
+		             "" + data.getMaxOutgoingLinks(),
+		             "" + advancedData.getDiameter()
+		             );
 		     
-			ListView<String> listView = new ListView<String>(names);
-			GridPane.setConstraints(listView, 1, 1);
-		     
+			ListView<String> listViewNames = new ListView<String>(names);
+			ListView<String> listViewValues = new ListView<String>(values);
+		    listViewNames.setMinWidth(50);
+		    listViewValues.setMinWidth(50);
+			
+			HBox hbox = new HBox(listViewNames, listViewValues);			
+			hbox.setAlignment(Pos.CENTER);
 			// don't forget to add children to gridpane
-			gridpane.getChildren().addAll(listView);
+			pane.getChildren().addAll(hbox);
 	   
-			Scene statScene = new Scene(gridpane,600, 600);
-			listView.autosize();
+			Scene statScene = new Scene(pane,600, 600);
+			listViewNames.autosize();
 			statStage.setScene(statScene);
 			statStage.show();
 		});
@@ -827,9 +860,9 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 					//aggiorna il borderPane con i dati nuovi
 					//borderPane.setRight(nvb);
 				System.out.println(currentWebsite);
-					ScrollPane spCenter = new ScrollPane(wss.getGroup());
-					spCenter.setFitToHeight(true);
-					borderPane.setCenter(spCenter);
+					//ScrollPane spCenter = new ScrollPane(wss.getGroup());
+					//spCenter.setFitToHeight(true);
+					borderPane.setCenter(wss.getCenterTable());
 				});
 				}
 		});		

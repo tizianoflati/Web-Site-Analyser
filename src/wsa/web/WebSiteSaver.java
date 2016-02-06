@@ -12,9 +12,9 @@ import java.util.Set;
 public class WebSiteSaver {
 	public static void save(SiteCrawler siteCrawler, File selectedDir, URI dominio){
 		System.out.println("SAVING " + dominio + " ON DISK: " + selectedDir);
-		
+		System.out.println("FILE: " + dominio.toString().replaceAll("[/:]", "_")+".wsa");
 		try {
-			BufferedWriter writer = new BufferedWriter( new FileWriter( new File(selectedDir, dominio.getHost().toString()+".wsa") ) );
+			BufferedWriter writer = new BufferedWriter( new FileWriter( new File(selectedDir, dominio.toString().replaceAll("[/:]", "_")+".wsa") ) );
 			
 			String newLine = System.lineSeparator();
 			writer.write(dominio.toString() + newLine);

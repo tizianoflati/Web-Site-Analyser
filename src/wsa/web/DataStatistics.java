@@ -23,11 +23,13 @@ public class DataStatistics {
 		return siteCrawler.getLoaded().size();
 	}
 	
-	public int getInnerDomURI(URI dom) {
+	public int getInnerDomURI() {
 		int n = 0;
 		
 		for( URI u : siteCrawler.getLoaded() ) {
-			if(SiteCrawlerC.checkSeed(dom, u)) n++;
+			CrawlerResult cr = siteCrawler.get(u);
+			if(cr.linkPage)
+				n++;
 		}
 		
 		return n;
