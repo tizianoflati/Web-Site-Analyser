@@ -196,11 +196,21 @@ public class CrawlerThread extends Thread {
 									URI uriLink = new URI(link);
 									
 									// ADD THE NEW LINK TO THE QUEUE
-									if(uriLink.getScheme() == null)
+									if(!uriLink.isAbsolute())
 									{
-										System.out.println("RELATIVE URI: " + uriLink);
-										uriLink = new URI(uri.getScheme() + "://" +  uri.getHost() + uriLink);
-										System.out.println("NEW ABSOLUTE URI: " + uriLink);
+//										System.out.println("RELATIVE URI: " + uriLink);
+										
+										uriLink = uri.resolve(uriLink);
+										
+//										String host = uri.getHost();
+//										if(host == null) host = "";
+//										
+//										String path = uri.getPath();
+//										if(path == null) path = "";
+//										
+//										uriLink = new URI(uri.getScheme() + "://" +  host + path + uriLink);
+										
+//										System.out.println("NEW ABSOLUTE URI: " + uriLink);
 									}
 									this.add(uriLink);
 	

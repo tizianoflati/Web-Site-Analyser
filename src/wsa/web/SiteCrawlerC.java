@@ -24,7 +24,11 @@ public class SiteCrawlerC implements SiteCrawler{
     static boolean checkDomain(URI dom) {
     	if( !dom.isAbsolute() ) return false;
     	if( !dom.getSchemeSpecificPart().startsWith("/") ) return false;
-    	if( dom.getAuthority().equals(dom.getHost()) ) return true;
+    	
+    	String authority = dom.getAuthority();
+    	String host = dom.getHost();
+    	if(authority == null && host == null) return true;
+    	if( authority.equals(host) ) return true;
         return false;
     }
     

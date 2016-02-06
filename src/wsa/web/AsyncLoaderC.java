@@ -12,7 +12,7 @@ public class AsyncLoaderC implements AsyncLoader{
 	public AsyncLoaderC(Loader loader) {
 		this.loader = loader;
 		
-		executorService = Executors.newCachedThreadPool();
+		executorService = Executors.newFixedThreadPool(30);
 	}
 	
 	@Override
