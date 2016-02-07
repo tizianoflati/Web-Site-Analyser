@@ -677,7 +677,7 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 System.out.println("WebSite  " + currentWebsite + ":");
 			wss.showInfo();
 
-			if( wss.siteCrawler.isRunning() ){
+			if( wss.siteCrawler != null && wss.siteCrawler.isRunning() ){
 //				borderPane.setCenter(new ScrollPane(wss.getGroup()));
 				borderPane.setCenter(wss.getCenterTable());
 			}
@@ -1229,8 +1229,8 @@ System.out.println("URI LIST:" + lr.uriList.size() + " " + lr.uriList);
 		table.getColumns().add(statusCol);
 		table.getColumns().add(isIntDomCol);
 		table.getColumns().add(outgoingLinksCol);
-		table.getColumns().add(detailedCol);
 		table.getColumns().add(incomingLinksCol);
+		table.getColumns().add(detailedCol);
 
 		TableCell<LinkResult, String> cell;
 
