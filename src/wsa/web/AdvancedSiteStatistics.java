@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 public class AdvancedSiteStatistics {
 	
@@ -50,63 +51,67 @@ public class AdvancedSiteStatistics {
 	
 	public int getDiameter()
 	{
-//		Map<URI, Map<URI, Integer>> distances = new HashMap<URI, Map<URI, Integer>>();
-//		for(URI u : graph.keySet())
-//		{
-//			Map<URI, Integer> d = distances.get(u);
-//			if(d == null){d = new HashMap<URI, Integer>(); distances.put(u, d);}
-//			
-//			for(URI v : graph.keySet())
-//			{
-//				if(u == v) d.put(v, 0);
-//				else if(graph.get(u).contains(v))
-//				{
+//		System.out.println("GRAPH:" + graph);
+		
+		Map<URI, Map<URI, Integer>> distances = new HashMap<URI, Map<URI, Integer>>();
+		Set<URI> vertices = graph.keySet();
+		for(URI u : vertices)
+		{
+			Map<URI, Integer> d = distances.get(u);
+			if(d == null){d = new HashMap<URI, Integer>(); distances.put(u, d);}
+			
+			for(URI v : vertices)
+			{
+				if(u == v) d.put(v, 0);
+				else if(graph.get(u).contains(v))
+				{
 //					System.out.println(graph.get(u).contains(v) + "\t" + graph.get(u));
-//					d.put(v, 1);
-//				}
-//				else d.put(v, Integer.MAX_VALUE);
-//			}
-//		}
-//		
-//		for(URI z : graph.keySet())
-//			for(URI u : graph.keySet())
-//				for(URI v : graph.keySet())
-//				{
-//					Integer uv = distances.get(u).get(v);
-//					Integer uz = distances.get(u).get(z);
-//					Integer zv = distances.get(z).get(v);
-//					
-//					if(uv == Integer.MAX_VALUE) continue;
-//					if(uz == Integer.MAX_VALUE) continue;
-//					if(zv == Integer.MAX_VALUE) continue;
-//					
-//					if(uv > uz + zv)
-//						distances.get(u).put(v, uz + zv);
-//				}
-//		
-//		Integer max = 0;
-//		for(URI u : distances.keySet())
-//			for(URI v : distances.keySet())
-//			{
-//				Integer d = distances.get(u).get(v);
-//				
-//				System.out.println("DISTANCE: " + u + "--" + v + " = " + d);
-//				
-//				if(d == Integer.MAX_VALUE) continue;
-//				else max = Math.max(max, d);
-//			}
-//		return max;
+					d.put(v, 1);
+				}
+				else d.put(v, Integer.MAX_VALUE);
+			}
+		}
+		
+//		System.out.println("DISTANCES: " + distances);
+		
+		for(URI z : vertices)
+			for(URI u : vertices)
+				for(URI v : vertices)
+				{
+					Integer uv = distances.get(u).get(v);
+					Integer uz = distances.get(u).get(z);
+					Integer zv = distances.get(z).get(v);
+				
+					if(uz == Integer.MAX_VALUE) continue;
+					if(zv == Integer.MAX_VALUE) continue;
+					
+					if(uv > uz + zv)
+						distances.get(u).put(v, uz + zv);
+				}
 		
 		Integer max = 0;
-		for(URI u : graph.keySet())
-			for(URI v : graph.keySet())
+		for(URI u : distances.keySet())
+			for(URI v : distances.keySet())
 			{
-				if(u == v) continue;
+				Integer d = distances.get(u).get(v);
 				
-				Integer d = getDistance(u, v);
+//				System.out.println("DISTANCE: " + u + "--" + v + " = " + d);
+				
 				if(d == Integer.MAX_VALUE) continue;
 				else max = Math.max(max, d);
 			}
 		return max;
+		
+//		Integer max = 0;
+//		for(URI u : graph.keySet())
+//			for(URI v : graph.keySet())
+//			{
+//				if(u == v) continue;
+//				
+//				Integer d = getDistance(u, v);
+//				if(d == Integer.MAX_VALUE) continue;
+//				else max = Math.max(max, d);
+//			}
+//		return max;
 	}
 }

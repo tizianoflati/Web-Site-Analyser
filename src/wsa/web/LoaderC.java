@@ -19,7 +19,7 @@ public class LoaderC implements Loader {
 	public LoadResult load(URL url) {
 
 		try {
-			long random = 0 * (1+rand.nextInt(5));
+			long random = 1000 * (1+rand.nextInt(5));
 			System.out.println("WAITING " + random/1000 + "s BEFORE DOWNLOADING");
 			Thread.sleep(random);
 		} catch (InterruptedException e1) {
@@ -53,7 +53,7 @@ public class LoaderC implements Loader {
 		}
 		catch (IOException e)
 		{
-			new IOException(e.getMessage() + " for url: " + url).printStackTrace();
+//			new IOException(e.getMessage() + " for url: " + url).printStackTrace();
 //			e.printStackTrace();
 			exception = e;
 		}
@@ -71,7 +71,6 @@ public class LoaderC implements Loader {
 			catch (IOException e)
 			{
 				e.printStackTrace();
-				exception = e;
 			}
 		}
 		
@@ -83,12 +82,26 @@ public class LoaderC implements Loader {
 
 	@Override
 	public Exception check(URL url) {
+		
+		URLConnection connection = null;
+		
 		try
 		{
-			URLConnection connection = url.openConnection();
+			connection = url.openConnection();
 			connection.connect();
 		} catch (IOException e) {
 			return e;
+		}
+		finally
+		{
+			try
+			{
+				if(connection != null) connection.getInputStream().close();
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
 		}
 		
 		return null;

@@ -97,10 +97,12 @@ public class GuiNew extends Application{
 		private final SimpleStringProperty exception;
 		private final SimpleIntegerProperty outgoing;
 		private final SimpleIntegerProperty incoming;
+		private final URI uri;
 		private List<URI> uriList;
 		private List<URI> uriIncomingList;
 
 		private LinkResult(CrawlerResult result) {
+			this.uri = result.uri;
 			this.urlName = new SimpleStringProperty(result.uri.toString());
 			this.linkPage = new SimpleBooleanProperty(result.linkPage);
 			this.exception = new SimpleStringProperty(result.exc == null ? "OK" : result.exc.toString() + ": " + result.exc.getMessage());
@@ -254,14 +256,20 @@ public class GuiNew extends Application{
 						while((cro=siteCrawler.get()).isPresent() && cro.get().uri != null)
 						{
 							CrawlerResult cr = cro.get();
+							
+							LinkResult newLr = new LinkResult(cr);
+							
 							for(LinkResult lr : obsList) {
 								if(cr.links != null)
-									if(cr.links.contains(lr.urlName.get()) )
+									if(cr.links.contains(lr.uri) )
 										lr.add(cr.uri);
+
+								if(lr.uriList != null)
+									if(lr.uriList.contains(cr.uri))
+										newLr.add(lr.uri);
 							}
-							LinkResult lr = new LinkResult(cr);
-							System.out.println("CRAWLER RESULT: " + cro.get().uri + "\t" + cro.get().links);
-							obsList.add(lr);				
+							
+							obsList.add(newLr);				
 						}
 					}
 				}, 0, 1000);
@@ -669,8 +677,9 @@ System.out.println("WebsiteState " + currentWebsite + " loaded");
 System.out.println("WebSite  " + currentWebsite + ":");
 			wss.showInfo();
 
-			if( wss.siteCrawler != null ){
-				borderPane.setCenter(new ScrollPane(wss.getGroup()));       		
+			if( wss.siteCrawler.isRunning() ){
+//				borderPane.setCenter(new ScrollPane(wss.getGroup()));
+				borderPane.setCenter(wss.getCenterTable());
 			}
 			else {
 				borderPane.setCenter(wss.getCenter());
@@ -1313,91 +1322,91 @@ System.out.println(newUri.getText());
 	
 	
 	//TODO serve davvero?
-	public Button createGoButton() {
-		Button goButton = new Button("GO");
-		
-		goButton.setOnAction( e -> {
-			System.out.println("dom = " + stateMap.get(currentWebsite).dominioText.getText());
-			
-			if( stateMap.get(currentWebsite).dominioText.getText().isEmpty() || stateMap.get(currentWebsite).seedsList.isEmpty() ) {
-				
-				createPopup("Dati insufficienti!", borderPane);
-				
-			}
-			else {
-				//	Crea finestra per salvare
-				Stage stage = new Stage();
-				
-				Text text = new Text("Save per salvare su disco");
-				Text text2 = new Text("START per continuare");
-				text.setTextAlignment(TextAlignment.CENTER);
-				text2.setTextAlignment(TextAlignment.CENTER);
-				
-				Button start = new Button("START");
-				Button saveB = new Button("Save");
-				
-				start.setOnAction( eStart -> {
-					//START
-					WebsiteState wss = stateMap.get(currentWebsite);
-					SiteCrawler siteCrawler = null;
-					try
-					{
-						URI uri = new URI(wss.dominioText.getText());
-						siteCrawler = WebFactoryWSA.getSiteCrawler(uri, wss.getPath());
-						wss.setSiteCrawler(siteCrawler);
-						for(TextField tf : wss.seedsList) {
-							siteCrawler.addSeed(new URI(tf.getText()));
-						}
-					}
-					catch(URISyntaxException e1)
-					{
-						createPopup("errore URI", borderPane);
-					}
-					catch(IOException e2)
-					{
-						createPopup("errore IO", borderPane);
-					}
-					catch(IllegalArgumentException e3)
-					{
-						createPopup("Dominio non corretto", borderPane);
-						return;
-					}
-				});
-					
-					//aggiorna la VBox per levare il tasto "save" ed aggiungere "stat"
-				
-				saveB.setOnAction( (eSave) -> {
-					
-					Stage saveStage = new Stage();
-					
-					DirectoryChooser directoryChooser = new DirectoryChooser();
-					directoryChooser.setTitle("Open Resource File");
-
-					final File selectedDirectory = directoryChooser.showDialog(saveStage);
-					if (selectedDirectory != null) {
-System.out.println(selectedDirectory.getAbsolutePath()); //Test
-					stateMap.get(currentWebsite).setPath(selectedDirectory.toPath());
-					}
-				});
-				
-				HBox hbox = new HBox(saveB, start);
-				hbox.setAlignment(Pos.CENTER);
-				hbox.setSpacing(20);
-
-				VBox vbPop = new VBox(text, text2, hbox);
-				vbPop.setAlignment(Pos.CENTER);
-				vbPop.setSpacing(10);
-
-				Scene scene = new Scene(vbPop, 200, 200);
-				stage.initModality(Modality.WINDOW_MODAL);
-				stage.initOwner(borderPane.getScene().getWindow());
-				stage.setScene(scene);
-				stage.show();	
-			}
-		});
-			
-		return goButton;
-	}
+//	public Button createGoButton() {
+//		Button goButton = new Button("GO");
+//		
+//		goButton.setOnAction( e -> {
+//			System.out.println("dom = " + stateMap.get(currentWebsite).dominioText.getText());
+//			
+//			if( stateMap.get(currentWebsite).dominioText.getText().isEmpty() || stateMap.get(currentWebsite).seedsList.isEmpty() ) {
+//				
+//				createPopup("Dati insufficienti!", borderPane);
+//				
+//			}
+//			else {
+//				//	Crea finestra per salvare
+//				Stage stage = new Stage();
+//				
+//				Text text = new Text("Save per salvare su disco");
+//				Text text2 = new Text("START per continuare");
+//				text.setTextAlignment(TextAlignment.CENTER);
+//				text2.setTextAlignment(TextAlignment.CENTER);
+//				
+//				Button start = new Button("START");
+//				Button saveB = new Button("Save");
+//				
+//				start.setOnAction( eStart -> {
+//					//START
+//					WebsiteState wss = stateMap.get(currentWebsite);
+//					SiteCrawler siteCrawler = null;
+//					try
+//					{
+//						URI uri = new URI(wss.dominioText.getText());
+//						siteCrawler = WebFactoryWSA.getSiteCrawler(uri, wss.getPath());
+//						wss.setSiteCrawler(siteCrawler);
+//						for(TextField tf : wss.seedsList) {
+//							siteCrawler.addSeed(new URI(tf.getText()));
+//						}
+//					}
+//					catch(URISyntaxException e1)
+//					{
+//						createPopup("errore URI", borderPane);
+//					}
+//					catch(IOException e2)
+//					{
+//						createPopup("errore IO", borderPane);
+//					}
+//					catch(IllegalArgumentException e3)
+//					{
+//						createPopup("Dominio non corretto", borderPane);
+//						return;
+//					}
+//				});
+//					
+//					//aggiorna la VBox per levare il tasto "save" ed aggiungere "stat"
+//				
+//				saveB.setOnAction( (eSave) -> {
+//					
+//					Stage saveStage = new Stage();
+//					
+//					DirectoryChooser directoryChooser = new DirectoryChooser();
+//					directoryChooser.setTitle("Open Resource File");
+//
+//					final File selectedDirectory = directoryChooser.showDialog(saveStage);
+//					if (selectedDirectory != null) {
+//System.out.println(selectedDirectory.getAbsolutePath()); //Test
+//					stateMap.get(currentWebsite).setPath(selectedDirectory.toPath());
+//					}
+//				});
+//				
+//				HBox hbox = new HBox(saveB, start);
+//				hbox.setAlignment(Pos.CENTER);
+//				hbox.setSpacing(20);
+//
+//				VBox vbPop = new VBox(text, text2, hbox);
+//				vbPop.setAlignment(Pos.CENTER);
+//				vbPop.setSpacing(10);
+//
+//				Scene scene = new Scene(vbPop, 200, 200);
+//				stage.initModality(Modality.WINDOW_MODAL);
+//				stage.initOwner(borderPane.getScene().getWindow());
+//				stage.setScene(scene);
+//				stage.show();	
+//			}
+//		});
+//			
+//		return goButton;
+//	}
 	
 	public static void main(String[] args) {
 		launch(args);

@@ -53,8 +53,6 @@ public class CrawlerThread extends Thread {
 		if(toLoad != null) for(URI uri : toLoad) add(uri);
 		if(errs != null) this.errors.addAll(errs);
 		if(pageLink != null) this.predicate = pageLink;
-		
-		this.resultThreadsExecutor = Executors.newCachedThreadPool();
 	}
 
 	synchronized public CrawlerState getCrawlerState()
@@ -67,6 +65,11 @@ public class CrawlerThread extends Thread {
 		System.out.println("SETTING STATE TO: " + newState);
 		this.state = newState;
 
+		if(newState == CrawlerState.RUNNING)
+		{
+			this.resultThreadsExecutor = Executors.newFixedThreadPool(30);
+		}
+		
 //		if(newState == CrawlerState.SUSPENDED)
 //		{
 //			synchronized (lock) {
@@ -88,14 +91,14 @@ public class CrawlerThread extends Thread {
 			resultThreadsExecutor.shutdownNow();
 			
 			// And the main crawler thread waits for the sub-threads to finish
-			try
-			{
-				resultThreadsExecutor.awaitTermination(15, TimeUnit.SECONDS);
-			}
-			catch (InterruptedException e)
-			{
-				e.printStackTrace();
-			}
+//			try
+//			{
+//				resultThreadsExecutor.awaitTermination(15, TimeUnit.SECONDS);
+//			}
+//			catch (InterruptedException e)
+//			{
+//				e.printStackTrace();
+//			}
 		}
 		
 		if(newState == CrawlerState.CANCELLED)
@@ -189,29 +192,13 @@ public class CrawlerThread extends Thread {
 							if(loadResult.parsed != null)
 							for(String link : loadResult.parsed.getLinks())
 							{
-//								 System.out.println("ADDING NEW LINK TO CRAWLER RESULT: " + link);
-	
 								try
 								{
 									URI uriLink = new URI(link);
 									
 									// ADD THE NEW LINK TO THE QUEUE
-									if(!uriLink.isAbsolute())
-									{
-//										System.out.println("RELATIVE URI: " + uriLink);
-										
-										uriLink = uri.resolve(uriLink);
-										
-//										String host = uri.getHost();
-//										if(host == null) host = "";
-//										
-//										String path = uri.getPath();
-//										if(path == null) path = "";
-//										
-//										uriLink = new URI(uri.getScheme() + "://" +  host + path + uriLink);
-										
-//										System.out.println("NEW ABSOLUTE URI: " + uriLink);
-									}
+									if(!uriLink.isAbsolute()) uriLink = uri.resolve(uriLink);
+									
 									this.add(uriLink);
 	
 									links.add(uriLink);
@@ -242,6 +229,8 @@ public class CrawlerThread extends Thread {
 					// e.printStackTrace();
 					future.cancel(true);
 					System.out.println("DOWNLOAD INTERRUPTED? " + future.isCancelled());
+					System.out.println("PUTTING " + uri + " BACK IN THE QUEUE");
+					getToLoad().add(uri);
 					
 				} catch (ExecutionException e) {
 					e.printStackTrace();
@@ -260,7 +249,8 @@ public class CrawlerThread extends Thread {
 
 		if(getErrors().contains(uriLink)) return;
 		if(getLoaded().contains(uriLink)) return;
-
+		if(!predicate.test(uriLink)) return; // To avoid adding links external to the domain
+		
 		getToLoad().add(uriLink);
 		
 		synchronized (lock) {lock.notify();}
